@@ -74,12 +74,32 @@ export default function LeadForm({ onSuccess }) {
     context: "",
     email: "",
   });
-  const [hasTradeIn, setHasTradeIn] = useState(false);
+  const [hasTradeIn, setHasTradeIn] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const apiUrl = useMemo(() => import.meta.env.VITE_API_URL || "http://localhost:8000", []);
 
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const nameDone = form.name.trim().length > 0;
+  const intentDone = !!form.intent;
+  const modelDone = !!form.model;
+  const budgetDone = !!form.budget;
+  const tradeAnswered = hasTradeIn !== null;
+  const tradeDone = hasTradeIn === false || (hasTradeIn === true && form.tradeIn.trim().length > 0);
+  const paymentDone = !!form.paymentMethod;
+  const timelineDone = !!form.timeline;
+  const contextDone = form.context.trim().length > 0;
+  const pipelineComplete =
+    nameDone &&
+    intentDone &&
+    modelDone &&
+    budgetDone &&
+    tradeAnswered &&
+    tradeDone &&
+    paymentDone &&
+    timelineDone &&
+    contextDone;
 
   const loadDemo = () => {
     setHasTradeIn(true);
@@ -138,36 +158,53 @@ export default function LeadForm({ onSuccess }) {
             required
           />
         </div>
-        <UserBubble>{form.name}</UserBubble>
+        {nameDone && <UserBubble>{form.name}</UserBubble>}
 
-        <AssistantBubble>What brings you in today?</AssistantBubble>
-        <ChoiceChips options={intents} value={form.intent} onChange={(value) => setField("intent", value)} />
-        <UserBubble>{form.intent}</UserBubble>
+        {nameDone && (
+          <>
+            <AssistantBubble>What brings you in today?</AssistantBubble>
+            <ChoiceChips options={intents} value={form.intent} onChange={(value) => setField("intent", value)} />
+          </>
+        )}
+        {intentDone && <UserBubble>{form.intent}</UserBubble>}
 
-        <AssistantBubble>Which model caught your eye?</AssistantBubble>
-        <ChoiceChips
-          options={models}
-          value={form.model}
-          onChange={(value) => setField("model", value)}
-          columns="sm:grid-cols-3"
-        />
-        <UserBubble>{form.model}</UserBubble>
+        {intentDone && (
+          <>
+            <AssistantBubble>Which model caught your eye?</AssistantBubble>
+            <ChoiceChips
+              options={models}
+              value={form.model}
+              onChange={(value) => setField("model", value)}
+              columns="sm:grid-cols-3"
+            />
+          </>
+        )}
+        {modelDone && <UserBubble>{form.model}</UserBubble>}
 
-        <AssistantBubble>What budget range feels right?</AssistantBubble>
-        <ChoiceChips options={budgets} value={form.budget} onChange={(value) => setField("budget", value)} />
-        <UserBubble>{form.budget}</UserBubble>
+        {modelDone && (
+          <>
+            <AssistantBubble>What budget range feels right?</AssistantBubble>
+            <ChoiceChips options={budgets} value={form.budget} onChange={(value) => setField("budget", value)} />
+          </>
+        )}
+        {budgetDone && <UserBubble>{form.budget}</UserBubble>}
 
-        <AssistantBubble>Do you have a trade-in?</AssistantBubble>
-        <ChoiceChips
-          options={["No", "Yes"]}
-          value={hasTradeIn ? "Yes" : "No"}
-          onChange={(value) => {
-            const yes = value === "Yes";
-            setHasTradeIn(yes);
-            if (!yes) setField("tradeIn", "");
-          }}
-          columns="grid-cols-2 max-w-[320px]"
-        />
+        {budgetDone && (
+          <>
+            <AssistantBubble>Do you have a trade-in?</AssistantBubble>
+            <ChoiceChips
+              options={["No", "Yes"]}
+              value={hasTradeIn === null ? "" : hasTradeIn ? "Yes" : "No"}
+              onChange={(value) => {
+                const yes = value === "Yes";
+                setHasTradeIn(yes);
+                if (!yes) setField("tradeIn", "");
+              }}
+              columns="grid-cols-2 max-w-[320px]"
+            />
+          </>
+        )}
+
         {hasTradeIn && (
           <div className="mb-6 ml-12 animate-fadeUp">
             <input
@@ -178,51 +215,69 @@ export default function LeadForm({ onSuccess }) {
             />
           </div>
         )}
-        <UserBubble>{hasTradeIn ? form.tradeIn || "Yes, I have a trade-in." : "No trade-in."}</UserBubble>
+        {tradeAnswered && tradeDone && (
+          <UserBubble>{hasTradeIn ? form.tradeIn || "Yes, I have a trade-in." : "No trade-in."}</UserBubble>
+        )}
 
-        <AssistantBubble>How are you planning to pay?</AssistantBubble>
-        <ChoiceChips options={paymentMethods} value={form.paymentMethod} onChange={(value) => setField("paymentMethod", value)} />
-        <UserBubble>{form.paymentMethod}</UserBubble>
+        {tradeAnswered && tradeDone && (
+          <>
+            <AssistantBubble>How are you planning to pay?</AssistantBubble>
+            <ChoiceChips options={paymentMethods} value={form.paymentMethod} onChange={(value) => setField("paymentMethod", value)} />
+          </>
+        )}
+        {paymentDone && <UserBubble>{form.paymentMethod}</UserBubble>}
 
-        <AssistantBubble>How soon are you looking to decide?</AssistantBubble>
-        <ChoiceChips options={timelines} value={form.timeline} onChange={(value) => setField("timeline", value)} />
-        <UserBubble>{form.timeline}</UserBubble>
+        {paymentDone && (
+          <>
+            <AssistantBubble>How soon are you looking to decide?</AssistantBubble>
+            <ChoiceChips options={timelines} value={form.timeline} onChange={(value) => setField("timeline", value)} />
+          </>
+        )}
+        {timelineDone && <UserBubble>{form.timeline}</UserBubble>}
 
-        <AssistantBubble>
-          Tell us about your life and how you will use this vehicle. The more specific you are, the better we can match you.
-        </AssistantBubble>
-        <div className="mb-5 ml-12">
-          <textarea
-            className="min-h-[130px] w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
-            placeholder="Kids, pets, commute, ski trips, camping, city driving, anything that matters."
-            value={form.context}
-            onChange={(e) => setField("context", e.target.value)}
-            required
-          />
-        </div>
-        <UserBubble>{form.context}</UserBubble>
+        {timelineDone && (
+          <>
+            <AssistantBubble>
+              Tell us about your life and how you will use this vehicle. The more specific you are, the better we can match you.
+            </AssistantBubble>
+            <div className="mb-5 ml-12">
+              <textarea
+                className="min-h-[130px] w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+                placeholder="Kids, pets, commute, ski trips, camping, city driving, anything that matters."
+                value={form.context}
+                onChange={(e) => setField("context", e.target.value)}
+                required
+              />
+            </div>
+          </>
+        )}
+        {contextDone && <UserBubble>{form.context}</UserBubble>}
 
-        <AssistantBubble>Want a personalized follow-up email? (Optional)</AssistantBubble>
-        <div className="mb-3 ml-12">
-          <input
-            type="email"
-            className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
-            placeholder="Email address"
-            value={form.email}
-            onChange={(e) => setField("email", e.target.value)}
-          />
-          <p className="mt-2 text-sm text-slate-500">We send one thoughtful message, no spam.</p>
-        </div>
+        {contextDone && (
+          <>
+            <AssistantBubble>Want a personalized follow-up email? (Optional)</AssistantBubble>
+            <div className="mb-3 ml-12">
+              <input
+                type="email"
+                className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+                placeholder="Email address"
+                value={form.email}
+                onChange={(e) => setField("email", e.target.value)}
+              />
+              <p className="mt-2 text-sm text-slate-500">We send one thoughtful message, no spam.</p>
+            </div>
+          </>
+        )}
       </div>
 
       <footer className="border-t border-[#d8dfeb] bg-white px-5 py-4">
         {error && <p className="mb-3 rounded-lg bg-red-50 p-3 text-red-700">{error}</p>}
         <button
-          disabled={loading}
+          disabled={loading || !pipelineComplete}
           type="submit"
-          className="w-full rounded-2xl bg-[#2a6fcd] px-4 py-3 text-lg font-semibold text-white disabled:opacity-70"
+          className="w-full rounded-2xl bg-[#2a6fcd] px-4 py-3 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Analyzing your inquiry..." : "Send to Specialist Team"}
+          {loading ? "Analyzing your inquiry..." : pipelineComplete ? "Send to Specialist Team" : "Complete the steps above"}
         </button>
         {loading && (
           <div className="mt-3 h-2 w-full overflow-hidden rounded bg-[#d3deef]">
