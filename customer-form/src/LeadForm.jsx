@@ -19,16 +19,40 @@ const demoData = {
   email: "",
 };
 
-function OptionButtons({ options, value, onChange }) {
+function AssistantBubble({ children }) {
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="mb-2 flex items-start gap-3 animate-fadeUp">
+      <div className="mt-1 h-9 w-9 rounded-full border border-slate-200 bg-white text-center text-2xl leading-8 text-[#2a6fcd]">✦</div>
+      <div className="max-w-[760px] rounded-2xl border border-[#d6deea] bg-white px-5 py-4 text-lg text-slate-800 shadow-sm">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function UserBubble({ children }) {
+  if (!children) return null;
+  return (
+    <div className="mb-5 flex justify-end animate-fadeUp">
+      <div className="max-w-[600px] rounded-2xl bg-[#2a6fcd] px-5 py-3 text-lg text-white shadow-sm">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ChoiceChips({ options, value, onChange, columns = "sm:grid-cols-2" }) {
+  return (
+    <div className={`mb-6 ml-12 grid gap-3 ${columns}`}>
       {options.map((option) => (
         <button
           key={option}
           type="button"
           onClick={() => onChange(option)}
-          className={`rounded-xl border px-4 py-2 text-left transition ${
-            value === option ? "border-brand bg-brand text-white" : "border-slate-300 bg-white hover:border-brand"
+          className={`rounded-full border px-5 py-2.5 text-left text-lg transition ${
+            value === option
+              ? "border-[#2a6fcd] bg-[#2a6fcd] text-white"
+              : "border-[#b8cae5] bg-white text-[#1b4e96] hover:border-[#2a6fcd]"
           }`}
         >
           {option}
@@ -53,7 +77,6 @@ export default function LeadForm({ onSuccess }) {
   const [hasTradeIn, setHasTradeIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
   const apiUrl = useMemo(() => import.meta.env.VITE_API_URL || "http://localhost:8000", []);
 
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -76,7 +99,6 @@ export default function LeadForm({ onSuccess }) {
       });
 
       if (!response.ok) throw new Error("We could not submit your request right now.");
-
       const data = await response.json();
       onSuccess({ ...data, customerName: form.name });
     } catch (err) {
@@ -87,78 +109,127 @@ export default function LeadForm({ onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="animate-fadeUp rounded-2xl border border-slate-200 bg-white p-6 shadow-lg md:p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold tracking-wide text-brand">Mark Miller Subaru South Towne</p>
-          <h1 className="text-2xl font-bold text-slate-900">Find the right Subaru for your life</h1>
+    <form onSubmit={handleSubmit} className="overflow-hidden rounded-[28px] border border-[#d8dfeb] bg-[#f3f6fb] shadow-xl">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d8dfeb] bg-white px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-[#2a6fcd] text-center text-2xl leading-10 text-white">✦</div>
+          <div>
+            <p className="text-sm font-semibold tracking-wide text-[#1b4e96]">MARK MILLER SUBARU SOUTH TOWNE</p>
+            <p className="text-lg font-semibold text-slate-900">AI Shopping Assistant</p>
+          </div>
         </div>
-        <button type="button" onClick={loadDemo} className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:border-brand">
+        <button
+          type="button"
+          onClick={loadDemo}
+          className="rounded-full border border-[#b8cae5] bg-white px-4 py-2 text-sm font-semibold text-[#1b4e96] hover:border-[#2a6fcd]"
+        >
           Load Demo
         </button>
-      </div>
+      </header>
 
-      <div className="space-y-6">
-        <label className="block">
-          <span className="mb-2 block font-medium">What's your name?</span>
-          <input className="w-full rounded-xl border border-slate-300 px-4 py-3" placeholder="First name" value={form.name} onChange={(e) => setField("name", e.target.value)} required />
-        </label>
+      <div className="space-y-1 px-4 py-5 md:px-6">
+        <AssistantBubble>Hey there, welcome in. What should we call you?</AssistantBubble>
+        <div className="mb-5 ml-12">
+          <input
+            className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+            placeholder="First name"
+            value={form.name}
+            onChange={(e) => setField("name", e.target.value)}
+            required
+          />
+        </div>
+        <UserBubble>{form.name}</UserBubble>
 
-        <section>
-          <p className="mb-2 font-medium">What brings you in today?</p>
-          <OptionButtons options={intents} value={form.intent} onChange={(value) => setField("intent", value)} />
-        </section>
+        <AssistantBubble>What brings you in today?</AssistantBubble>
+        <ChoiceChips options={intents} value={form.intent} onChange={(value) => setField("intent", value)} />
+        <UserBubble>{form.intent}</UserBubble>
 
-        <section>
-          <p className="mb-2 font-medium">Which model caught your eye?</p>
-          <OptionButtons options={models} value={form.model} onChange={(value) => setField("model", value)} />
-        </section>
+        <AssistantBubble>Which model caught your eye?</AssistantBubble>
+        <ChoiceChips
+          options={models}
+          value={form.model}
+          onChange={(value) => setField("model", value)}
+          columns="sm:grid-cols-3"
+        />
+        <UserBubble>{form.model}</UserBubble>
 
-        <section>
-          <p className="mb-2 font-medium">What's your budget?</p>
-          <OptionButtons options={budgets} value={form.budget} onChange={(value) => setField("budget", value)} />
-        </section>
+        <AssistantBubble>What budget range feels right?</AssistantBubble>
+        <ChoiceChips options={budgets} value={form.budget} onChange={(value) => setField("budget", value)} />
+        <UserBubble>{form.budget}</UserBubble>
 
-        <section>
-          <p className="mb-2 font-medium">Do you have a trade-in?</p>
-          <div className="flex gap-2">
-            <button type="button" className={`rounded-lg border px-4 py-2 ${hasTradeIn ? "border-slate-300" : "border-brand bg-brand text-white"}`} onClick={() => { setHasTradeIn(false); setField("tradeIn", ""); }}>No</button>
-            <button type="button" className={`rounded-lg border px-4 py-2 ${hasTradeIn ? "border-brand bg-brand text-white" : "border-slate-300"}`} onClick={() => setHasTradeIn(true)}>Yes</button>
+        <AssistantBubble>Do you have a trade-in?</AssistantBubble>
+        <ChoiceChips
+          options={["No", "Yes"]}
+          value={hasTradeIn ? "Yes" : "No"}
+          onChange={(value) => {
+            const yes = value === "Yes";
+            setHasTradeIn(yes);
+            if (!yes) setField("tradeIn", "");
+          }}
+          columns="grid-cols-2 max-w-[320px]"
+        />
+        {hasTradeIn && (
+          <div className="mb-6 ml-12 animate-fadeUp">
+            <input
+              className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+              placeholder="e.g. 2019 Honda Pilot, 61000 miles, Good"
+              value={form.tradeIn}
+              onChange={(e) => setField("tradeIn", e.target.value)}
+            />
           </div>
-          {hasTradeIn && (
-            <input className="mt-3 w-full rounded-xl border border-slate-300 px-4 py-3" placeholder="e.g. 2019 Honda Pilot, 61000 miles, Good" value={form.tradeIn} onChange={(e) => setField("tradeIn", e.target.value)} />
-          )}
-        </section>
+        )}
+        <UserBubble>{hasTradeIn ? form.tradeIn || "Yes, I have a trade-in." : "No trade-in."}</UserBubble>
 
-        <section>
-          <p className="mb-2 font-medium">How are you planning to pay?</p>
-          <OptionButtons options={paymentMethods} value={form.paymentMethod} onChange={(value) => setField("paymentMethod", value)} />
-        </section>
+        <AssistantBubble>How are you planning to pay?</AssistantBubble>
+        <ChoiceChips options={paymentMethods} value={form.paymentMethod} onChange={(value) => setField("paymentMethod", value)} />
+        <UserBubble>{form.paymentMethod}</UserBubble>
 
-        <section>
-          <p className="mb-2 font-medium">How soon are you looking to decide?</p>
-          <OptionButtons options={timelines} value={form.timeline} onChange={(value) => setField("timeline", value)} />
-        </section>
+        <AssistantBubble>How soon are you looking to decide?</AssistantBubble>
+        <ChoiceChips options={timelines} value={form.timeline} onChange={(value) => setField("timeline", value)} />
+        <UserBubble>{form.timeline}</UserBubble>
 
-        <label className="block">
-          <span className="mb-2 block font-medium">Tell us about yourself and how you'll use this vehicle</span>
-          <textarea className="min-h-[100px] w-full rounded-xl border border-slate-300 px-4 py-3" placeholder="Share your routine, family, hobbies, and what matters most." value={form.context} onChange={(e) => setField("context", e.target.value)} required />
-          <span className="mt-2 block text-sm text-slate-600">The more you share, the better we can match you to the right vehicle and specialist.</span>
-        </label>
+        <AssistantBubble>
+          Tell us about your life and how you will use this vehicle. The more specific you are, the better we can match you.
+        </AssistantBubble>
+        <div className="mb-5 ml-12">
+          <textarea
+            className="min-h-[130px] w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+            placeholder="Kids, pets, commute, ski trips, camping, city driving, anything that matters."
+            value={form.context}
+            onChange={(e) => setField("context", e.target.value)}
+            required
+          />
+        </div>
+        <UserBubble>{form.context}</UserBubble>
 
-        <label className="block">
-          <span className="mb-2 block font-medium">Email address (optional)</span>
-          <input type="email" className="w-full rounded-xl border border-slate-300 px-4 py-3" placeholder="For your personalized follow-up" value={form.email} onChange={(e) => setField("email", e.target.value)} />
-          <span className="mt-2 block text-sm text-slate-600">We'll send one thoughtful email - no spam, ever.</span>
-        </label>
+        <AssistantBubble>Want a personalized follow-up email? (Optional)</AssistantBubble>
+        <div className="mb-3 ml-12">
+          <input
+            type="email"
+            className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+            placeholder="Email address"
+            value={form.email}
+            onChange={(e) => setField("email", e.target.value)}
+          />
+          <p className="mt-2 text-sm text-slate-500">We send one thoughtful message, no spam.</p>
+        </div>
       </div>
 
-      {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-red-700">{error}</p>}
-
-      <button disabled={loading} type="submit" className="mt-6 w-full rounded-xl bg-brand px-4 py-3 font-semibold text-white disabled:opacity-70">
-        {loading ? "Analyzing your inquiry..." : "Submit"}
-      </button>
-      {loading && <div className="mt-3 h-2 w-full overflow-hidden rounded bg-slate-200"><div className="h-2 w-1/3 animate-pulse rounded bg-brand" /></div>}
+      <footer className="border-t border-[#d8dfeb] bg-white px-5 py-4">
+        {error && <p className="mb-3 rounded-lg bg-red-50 p-3 text-red-700">{error}</p>}
+        <button
+          disabled={loading}
+          type="submit"
+          className="w-full rounded-2xl bg-[#2a6fcd] px-4 py-3 text-lg font-semibold text-white disabled:opacity-70"
+        >
+          {loading ? "Analyzing your inquiry..." : "Send to Specialist Team"}
+        </button>
+        {loading && (
+          <div className="mt-3 h-2 w-full overflow-hidden rounded bg-[#d3deef]">
+            <div className="h-2 w-1/3 animate-pulse rounded bg-[#2a6fcd]" />
+          </div>
+        )}
+      </footer>
     </form>
   );
 }
