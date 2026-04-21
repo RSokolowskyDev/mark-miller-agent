@@ -52,6 +52,25 @@ jobs:
           mkdir -p _site/dashboard
           cp -r customer-form/dist/* _site/customer-form/
           cp -r dashboard/dist/* _site/dashboard/
+          cat > _site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>Mark Miller Subaru Demo Apps</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.5; }
+                a { display: block; margin: 12px 0; font-size: 1.1rem; }
+              </style>
+            </head>
+            <body>
+              <h1>Mark Miller Subaru Demo Apps</h1>
+              <a href="./customer-form/">Customer Form</a>
+              <a href="./dashboard/">Dashboard</a>
+            </body>
+          </html>
+          EOF
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
