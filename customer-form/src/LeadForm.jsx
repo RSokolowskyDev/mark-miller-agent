@@ -75,21 +75,28 @@ export default function LeadForm({ onSuccess }) {
     email: "",
   });
   const [hasTradeIn, setHasTradeIn] = useState(null);
+  const [nameInput, setNameInput] = useState("");
+  const [tradeInInput, setTradeInInput] = useState("");
+  const [contextInput, setContextInput] = useState("");
+  const [nameSubmitted, setNameSubmitted] = useState(false);
+  const [tradeInSubmitted, setTradeInSubmitted] = useState(false);
+  const [contextSubmitted, setContextSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const apiUrl = useMemo(() => import.meta.env.VITE_API_URL || "http://localhost:8000", []);
 
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const nameDone = form.name.trim().length > 0;
+  const nameDone = nameSubmitted && form.name.trim().length > 0;
   const intentDone = !!form.intent;
   const modelDone = !!form.model;
   const budgetDone = !!form.budget;
   const tradeAnswered = hasTradeIn !== null;
-  const tradeDone = hasTradeIn === false || (hasTradeIn === true && form.tradeIn.trim().length > 0);
+  const tradeDone =
+    hasTradeIn === false || (hasTradeIn === true && tradeInSubmitted && form.tradeIn.trim().length > 0);
   const paymentDone = !!form.paymentMethod;
   const timelineDone = !!form.timeline;
-  const contextDone = form.context.trim().length > 0;
+  const contextDone = contextSubmitted && form.context.trim().length > 0;
   const pipelineComplete =
     nameDone &&
     intentDone &&
@@ -104,6 +111,33 @@ export default function LeadForm({ onSuccess }) {
   const loadDemo = () => {
     setHasTradeIn(true);
     setForm(demoData);
+    setNameInput(demoData.name);
+    setTradeInInput(demoData.tradeIn);
+    setContextInput(demoData.context);
+    setNameSubmitted(true);
+    setTradeInSubmitted(true);
+    setContextSubmitted(true);
+  };
+
+  const submitName = () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) return;
+    setField("name", trimmed);
+    setNameSubmitted(true);
+  };
+
+  const submitTradeIn = () => {
+    const trimmed = tradeInInput.trim();
+    if (!trimmed) return;
+    setField("tradeIn", trimmed);
+    setTradeInSubmitted(true);
+  };
+
+  const submitContext = () => {
+    const trimmed = contextInput.trim();
+    if (!trimmed) return;
+    setField("context", trimmed);
+    setContextSubmitted(true);
   };
 
   const handleSubmit = async (e) => {
@@ -149,15 +183,32 @@ export default function LeadForm({ onSuccess }) {
 
       <div className="space-y-1 px-4 py-5 md:px-6">
         <AssistantBubble>Hey there, welcome in. What should we call you?</AssistantBubble>
-        <div className="mb-5 ml-12">
-          <input
-            className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
-            placeholder="First name"
-            value={form.name}
-            onChange={(e) => setField("name", e.target.value)}
-            required
-          />
-        </div>
+        {!nameDone && (
+          <div className="mb-5 ml-12">
+            <div className="flex gap-2">
+              <input
+                className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+                placeholder="First name"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    submitName();
+                  }
+                }}
+                required
+              />
+              <button
+                type="button"
+                onClick={submitName}
+                className="rounded-2xl bg-[#2a6fcd] px-4 py-3 text-sm font-semibold text-white"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        )}
         {nameDone && <UserBubble>{form.name}</UserBubble>}
 
         {nameDone && (
@@ -198,21 +249,40 @@ export default function LeadForm({ onSuccess }) {
               onChange={(value) => {
                 const yes = value === "Yes";
                 setHasTradeIn(yes);
-                if (!yes) setField("tradeIn", "");
+                if (!yes) {
+                  setField("tradeIn", "");
+                  setTradeInSubmitted(false);
+                  setTradeInInput("");
+                }
               }}
               columns="grid-cols-2 max-w-[320px]"
             />
           </>
         )}
 
-        {hasTradeIn && (
+        {hasTradeIn && !tradeInSubmitted && (
           <div className="mb-6 ml-12 animate-fadeUp">
-            <input
-              className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
-              placeholder="e.g. 2019 Honda Pilot, 61000 miles, Good"
-              value={form.tradeIn}
-              onChange={(e) => setField("tradeIn", e.target.value)}
-            />
+            <div className="flex gap-2">
+              <input
+                className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+                placeholder="e.g. 2019 Honda Pilot, 61000 miles, Good"
+                value={tradeInInput}
+                onChange={(e) => setTradeInInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    submitTradeIn();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={submitTradeIn}
+                className="rounded-2xl bg-[#2a6fcd] px-4 py-3 text-sm font-semibold text-white"
+              >
+                Send
+              </button>
+            </div>
           </div>
         )}
         {tradeAnswered && tradeDone && (
@@ -240,15 +310,26 @@ export default function LeadForm({ onSuccess }) {
             <AssistantBubble>
               Tell us about your life and how you will use this vehicle. The more specific you are, the better we can match you.
             </AssistantBubble>
-            <div className="mb-5 ml-12">
-              <textarea
-                className="min-h-[130px] w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
-                placeholder="Kids, pets, commute, ski trips, camping, city driving, anything that matters."
-                value={form.context}
-                onChange={(e) => setField("context", e.target.value)}
-                required
-              />
-            </div>
+            {!contextDone && (
+              <div className="mb-5 ml-12">
+                <textarea
+                  className="min-h-[130px] w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+                  placeholder="Kids, pets, commute, ski trips, camping, city driving, anything that matters."
+                  value={contextInput}
+                  onChange={(e) => setContextInput(e.target.value)}
+                  required
+                />
+                <div className="mt-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={submitContext}
+                    className="rounded-2xl bg-[#2a6fcd] px-4 py-2 text-sm font-semibold text-white"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
         {contextDone && <UserBubble>{form.context}</UserBubble>}
