@@ -1,0 +1,7 @@
+.env
+__pycache__/
+node_modules/
+.gateway-cache/
+dist/
+*.db
+.DS_Store

@@ -1,0 +1,7 @@
+crewai>=0.80.0
+crewai-tools
+fastapi
+uvicorn
+python-dotenv
+pydantic
+aiofiles
