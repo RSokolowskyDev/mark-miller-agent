@@ -22,7 +22,7 @@ const demoData = {
 function AssistantBubble({ children }) {
   return (
     <div className="mb-2 flex items-start gap-3 animate-fadeUp">
-      <div className="mt-1 h-9 w-9 rounded-full border border-slate-200 bg-white text-center text-2xl leading-8 text-[#2a6fcd]">✦</div>
+      <div className="mt-1 h-9 w-9 rounded-full border border-slate-200 bg-white text-center text-xs font-bold leading-9 text-[#2a6fcd]">MM</div>
       <div className="max-w-[760px] rounded-2xl border border-[#d6deea] bg-white px-5 py-4 text-lg text-slate-800 shadow-sm">
         {children}
       </div>
@@ -112,7 +112,7 @@ export default function LeadForm({ onSuccess }) {
     <form onSubmit={handleSubmit} className="overflow-hidden rounded-[28px] border border-[#d8dfeb] bg-[#f3f6fb] shadow-xl">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d8dfeb] bg-white px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-[#2a6fcd] text-center text-2xl leading-10 text-white">✦</div>
+          <div className="h-10 w-10 rounded-full bg-[#2a6fcd] text-center text-sm font-bold leading-10 text-white">MM</div>
           <div>
             <p className="text-sm font-semibold tracking-wide text-[#1b4e96]">MARK MILLER SUBARU SOUTH TOWNE</p>
             <p className="text-lg font-semibold text-slate-900">AI Shopping Assistant</p>

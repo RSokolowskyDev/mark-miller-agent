@@ -4,7 +4,7 @@ export default function ThankYou({ result }) {
 
   return (
     <div className="rounded-[28px] border border-[#d8dfeb] bg-white p-10 text-center shadow-xl">
-      <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-[#2a6fcd] text-center text-3xl leading-[48px] text-white">✦</div>
+      <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-[#2a6fcd] text-center text-sm font-bold leading-[48px] text-white">MM</div>
       <h1 className="text-3xl font-bold text-slate-900">Thanks {name}</h1>
       <p className="mx-auto mt-4 max-w-xl text-lg text-slate-700">
         {specialist} is reviewing your information and will be in touch shortly.
