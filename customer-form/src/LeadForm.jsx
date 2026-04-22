@@ -1,261 +1,209 @@
 import { useMemo, useState } from "react";
 
-const intents = ["Looking to buy new", "Looking for used", "Just browsing", "Trade-in inquiry"];
-const models = ["Outback", "Forester", "Crosstrek", "Ascent", "Solterra", "Impreza", "WRX", "BRZ", "Not sure yet"];
-const budgets = ["Under $25k", "$25-35k", "$35-45k", "$45k+"];
-const paymentMethods = ["Finance", "Lease", "Cash"];
-const timelines = ["This week", "This month", "Just exploring"];
-const firstTimeChoices = ["Yes, first time", "No, I have bought before", "It has been a while"];
-const ownedNewChoices = ["Yes", "No", "Not sure"];
-const purchaseStyles = ["I want guidance", "I like to compare details", "I want the fastest process"];
-
-const demoProfiles = [
-  {
-    profileLabel: "Family Weekend Adventurer",
-    name: "Sarah",
-    intent: "Looking to buy new",
-    model: "Outback",
-    budget: "$35-45k",
-    tradeIn: "2019 Honda Pilot, around 61k miles, decent shape",
-    paymentMethod: "Finance",
-    timeline: "This month",
-    firstTimeBuyer: "No, I have bought before",
-    ownedNewVehicle: "Yes",
-    purchaseStyle: "I like to compare details",
-    context:
-      "We have 3 kids and 2 dogs, so space is a big deal for us. We do ski trips most weekends in winter and camping in summer, so AWD and cargo room matter a lot.",
-    extraNotes: "Safety tech and easy car-seat setup would be huge.",
-    email: "",
-  },
-  {
-    profileLabel: "First-Time City Buyer",
-    name: "Nina",
-    intent: "Looking to buy new",
-    model: "Crosstrek",
-    budget: "$25-35k",
-    tradeIn: "",
-    paymentMethod: "Lease",
-    timeline: "This week",
-    firstTimeBuyer: "Yes, first time",
-    ownedNewVehicle: "No",
-    purchaseStyle: "I want guidance",
-    context:
-      "This is my first time buying on my own. I mostly drive in the city and want something safe, not too big, and easy to park.",
-    extraNotes: "I get overwhelmed with options, so simple explanations help.",
-    email: "",
-  },
-  {
-    profileLabel: "Used + Trade-In Value Shopper",
-    name: "Marcus",
-    intent: "Looking for used",
-    model: "Forester",
-    budget: "Under $25k",
-    tradeIn: "2013 Ford Escape, 132k miles, some wear",
-    paymentMethod: "Cash",
-    timeline: "This week",
-    firstTimeBuyer: "No, I have bought before",
-    ownedNewVehicle: "Not sure",
-    purchaseStyle: "I want the fastest process",
-    context:
-      "Honestly just trying to get the best value without spending all day at the dealership. Mostly commute and kid drop-off, but I still need something solid in winter.",
-    extraNotes: "Please show out-the-door numbers up front.",
-    email: "",
-  },
-  {
-    profileLabel: "Performance Enthusiast",
-    name: "Evan",
-    intent: "Looking to buy new",
-    model: "WRX",
-    budget: "$35-45k",
-    tradeIn: "",
-    paymentMethod: "Finance",
-    timeline: "This month",
-    firstTimeBuyer: "It has been a while",
-    ownedNewVehicle: "Yes",
-    purchaseStyle: "I like to compare details",
-    context:
-      "I want something fun to drive but still practical as a daily. I'd like to compare trims side by side before I commit.",
-    extraNotes: "Would also like a quick breakdown of warranty and maintenance costs.",
-    email: "",
-  },
-  {
-    profileLabel: "EV-Curious Tech Professional",
-    name: "Priya",
-    intent: "Just browsing",
-    model: "Solterra",
-    budget: "$45k+",
-    tradeIn: "2020 Toyota RAV4 Hybrid, 42000 miles, Very Good",
-    paymentMethod: "Finance",
-    timeline: "Just exploring",
-    firstTimeBuyer: "No, I have bought before",
-    ownedNewVehicle: "Yes",
-    purchaseStyle: "I want guidance",
-    context:
-      "I am curious about going EV but I still have range anxiety, especially in winter. I want to understand charging and whether it actually fits my weekly routine.",
-    extraNotes: "A straightforward EV vs gas comparison would help.",
-    email: "",
-  },
+const TOTAL_STEPS = 10;
+const experienceButtons = [
+  "Walk me through everything",
+  "Give me the facts, I'll decide",
+  "No pressure, still early",
 ];
+const usageButtons = ["Daily commute", "Family / kids", "Outdoor adventures"];
+const priorityButtons = ["Safety", "Low payment", "Reliability"];
+const timelineButtons = ["This week", "This month", "Just exploring"];
+const followUpButtons = ["Email", "Text", "Call"];
 
-function AssistantBubble({ children }) {
-  return (
-    <div className="mb-2 flex items-start gap-3 animate-fadeUp">
-      <div className="mt-1 h-9 w-9 rounded-full border border-slate-200 bg-white text-center text-xs font-bold leading-9 text-[#2a6fcd]">MM</div>
-      <div className="max-w-[760px] rounded-2xl border border-[#d6deea] bg-white px-5 py-4 text-lg text-slate-800 shadow-sm">
-        {children}
-      </div>
-    </div>
-  );
+const confidenceCopy = {
+  1: "A little nervous, new to this",
+  2: "I could use a lot of guidance",
+  3: "Somewhere in the middle",
+  4: "Pretty confident overall",
+  5: "Confident, I know what I want",
+};
+
+const demoProfile = {
+  name: "Sarah",
+  confidence: 2,
+  experienceChoice: "Walk me through everything",
+  experienceText: "",
+  usageChoices: ["Family / kids", "Outdoor adventures"],
+  usageText: "",
+  priorityChoices: ["Safety", "Reliability"],
+  priorityText: "",
+  budgetSlider: 35000,
+  budgetText: "",
+  timeline: "This month",
+  tradeInYes: true,
+  tradeInDetails: "2019 Honda Pilot",
+  followUp: "Email",
+  context:
+    "I have three kids and two dogs — a lab and a golden. We ski up Little Cottonwood Canyon almost every weekend in winter. Need something with AWD, good cargo space, and that can handle Utah snow. My husband drives a truck so this would be the main family car. We also camp near Moab in the summer.",
+  email: "",
+};
+
+function formatBudget(value) {
+  if (value === null || value === undefined) return "";
+  if (value >= 70000) return "$70,000+";
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 }
 
-function UserBubble({ children }) {
-  if (!children) return null;
-  return (
-    <div className="mb-5 flex justify-end animate-fadeUp">
-      <div className="max-w-[600px] rounded-2xl bg-[#2a6fcd] px-5 py-3 text-lg text-white shadow-sm">
-        {children}
-      </div>
-    </div>
-  );
+function stepIsValid(step, form) {
+  switch (step) {
+    case 0:
+      return form.name.trim().length >= 1;
+    case 1:
+      return form.confidence >= 1 && form.confidence <= 5;
+    case 2:
+      return Boolean(form.experienceChoice || form.experienceText.trim());
+    case 3:
+      return form.usageChoices.length > 0 || Boolean(form.usageText.trim());
+    case 4:
+      return form.priorityChoices.length > 0 || Boolean(form.priorityText.trim());
+    case 5:
+      return Boolean(form.budgetText.trim()) || typeof form.budgetSlider === "number";
+    case 6:
+      return Boolean(form.timeline);
+    case 7:
+      return !form.tradeInYes || Boolean(form.tradeInDetails.trim());
+    case 8:
+      return Boolean(form.followUp);
+    case 9:
+      return true;
+    default:
+      return false;
+  }
 }
 
-function ChoiceChips({ options, value, onChange, columns = "sm:grid-cols-2" }) {
+function PrimaryButton({ active, children, ...props }) {
   return (
-    <div className={`mb-6 ml-12 grid gap-3 ${columns}`}>
-      {options.map((option) => (
-        <button
-          key={option}
-          type="button"
-          onClick={() => onChange(option)}
-          className={`rounded-full border px-5 py-2.5 text-left text-lg transition ${
-            value === option
-              ? "border-[#2a6fcd] bg-[#2a6fcd] text-white"
-              : "border-[#b8cae5] bg-white text-[#1b4e96] hover:border-[#2a6fcd]"
-          }`}
-        >
-          {option}
-        </button>
-      ))}
-    </div>
+    <button
+      {...props}
+      type="button"
+      className={`min-h-12 rounded-2xl border px-4 py-3 text-left text-base font-semibold transition ${
+        active
+          ? "border-[#1a3a6b] bg-[#1a3a6b] text-white"
+          : "border-[#b8cae5] bg-white text-[#1a3a6b] hover:border-[#1a3a6b]"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
 export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroundError }) {
   const [form, setForm] = useState({
     name: "",
-    intent: "",
-    model: "",
-    budget: "",
-    tradeIn: "",
-    paymentMethod: "",
+    confidence: 3,
+    experienceChoice: "",
+    experienceText: "",
+    usageChoices: [],
+    usageText: "",
+    priorityChoices: [],
+    priorityText: "",
+    budgetSlider: 30000,
+    budgetText: "",
     timeline: "",
+    tradeInYes: false,
+    tradeInDetails: "",
+    followUp: "Email",
     context: "",
-    firstTimeBuyer: "",
-    ownedNewVehicle: "",
-    purchaseStyle: "",
-    extraNotes: "",
     email: "",
   });
-  const [hasTradeIn, setHasTradeIn] = useState(null);
-  const [nameInput, setNameInput] = useState("");
-  const [tradeInInput, setTradeInInput] = useState("");
-  const [contextInput, setContextInput] = useState("");
-  const [extraNotesInput, setExtraNotesInput] = useState("");
-  const [nameSubmitted, setNameSubmitted] = useState(false);
-  const [tradeInSubmitted, setTradeInSubmitted] = useState(false);
-  const [contextSubmitted, setContextSubmitted] = useState(false);
-  const [extraNotesSubmitted, setExtraNotesSubmitted] = useState(false);
+  const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [demoLoadedLabel, setDemoLoadedLabel] = useState("");
-  const [lastDemoIndex, setLastDemoIndex] = useState(-1);
+
   const apiUrl = useMemo(() => import.meta.env.VITE_API_URL || "http://localhost:8000", []);
+  const canProceed = stepIsValid(step, form);
 
-  const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const updateField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const nameDone = nameSubmitted && form.name.trim().length > 0;
-  const intentDone = !!form.intent;
-  const modelDone = !!form.model;
-  const budgetDone = !!form.budget;
-  const tradeAnswered = hasTradeIn !== null;
-  const tradeDone =
-    hasTradeIn === false || (hasTradeIn === true && tradeInSubmitted && form.tradeIn.trim().length > 0);
-  const paymentDone = !!form.paymentMethod;
-  const timelineDone = !!form.timeline;
-  const contextDone = contextSubmitted && form.context.trim().length > 0;
-  const firstTimeDone = !!form.firstTimeBuyer;
-  const ownedNewDone = !!form.ownedNewVehicle;
-  const purchaseStyleDone = !!form.purchaseStyle;
-  const extraNotesDone = !extraNotesInput.trim() || extraNotesSubmitted;
-  const pipelineComplete =
-    nameDone &&
-    intentDone &&
-    modelDone &&
-    budgetDone &&
-    tradeAnswered &&
-    tradeDone &&
-    paymentDone &&
-    timelineDone &&
-    firstTimeDone &&
-    ownedNewDone &&
-    purchaseStyleDone &&
-    contextDone;
+  const goNext = () => {
+    if (!canProceed || loading) return;
+    if (step < TOTAL_STEPS - 1) {
+      setDirection(1);
+      setStep((prev) => prev + 1);
+    }
+  };
+
+  const goBack = () => {
+    if (step === 0 || loading) return;
+    setDirection(-1);
+    setStep((prev) => prev - 1);
+  };
+
+  const toggleMulti = (key, value) => {
+    setForm((prev) => {
+      const current = prev[key];
+      const has = current.includes(value);
+      if (has) return { ...prev, [key]: current.filter((item) => item !== value) };
+      return { ...prev, [key]: [...current, value] };
+    });
+  };
+
+  const togglePriorities = (value) => {
+    setForm((prev) => {
+      const current = prev.priorityChoices;
+      const has = current.includes(value);
+      if (has) {
+        return { ...prev, priorityChoices: current.filter((item) => item !== value) };
+      }
+      if (current.length >= 2) return prev;
+      return { ...prev, priorityChoices: [...current, value] };
+    });
+  };
 
   const loadDemo = () => {
-    let nextIndex = Math.floor(Math.random() * demoProfiles.length);
-    if (demoProfiles.length > 1 && nextIndex === lastDemoIndex) {
-      nextIndex = (nextIndex + 1) % demoProfiles.length;
-    }
-    const demoData = demoProfiles[nextIndex];
-    const hasTrade = Boolean((demoData.tradeIn || "").trim());
-
-    setLastDemoIndex(nextIndex);
-    setDemoLoadedLabel(demoData.profileLabel);
-    setHasTradeIn(hasTrade);
-    setForm(demoData);
-    setNameInput(demoData.name);
-    setTradeInInput(demoData.tradeIn || "");
-    setContextInput(demoData.context);
-    setExtraNotesInput(demoData.extraNotes || "");
-    setNameSubmitted(true);
-    setTradeInSubmitted(hasTrade);
-    setContextSubmitted(true);
-    setExtraNotesSubmitted(true);
-  };
-
-  const submitName = () => {
-    const trimmed = nameInput.trim();
-    if (!trimmed) return;
-    setField("name", trimmed);
-    setNameSubmitted(true);
-  };
-
-  const submitTradeIn = () => {
-    const trimmed = tradeInInput.trim();
-    if (!trimmed) return;
-    setField("tradeIn", trimmed);
-    setTradeInSubmitted(true);
-  };
-
-  const submitContext = () => {
-    const trimmed = contextInput.trim();
-    if (!trimmed) return;
-    setField("context", trimmed);
-    setContextSubmitted(true);
-  };
-
-  const submitExtraNotes = () => {
-    setField("extraNotes", extraNotesInput.trim());
-    setExtraNotesSubmitted(true);
+    setForm(demoProfile);
+    setStep(TOTAL_STEPS - 1);
+    setDirection(1);
+    setDemoLoadedLabel("Family Weekend Adventurer");
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading || !pipelineComplete || !extraNotesDone) return;
+    if (loading) return;
+    if (step < TOTAL_STEPS - 1) {
+      goNext();
+      return;
+    }
+
     setLoading(true);
     setError("");
 
-    const payload = { ...form };
+    const experience = form.experienceText.trim() || form.experienceChoice;
+    const usage = [...form.usageChoices, ...(form.usageText.trim() ? [form.usageText.trim()] : [])];
+    const priorities = [...form.priorityChoices, ...(form.priorityText.trim() ? [form.priorityText.trim()] : [])];
+    const budget = form.budgetText.trim() || form.budgetSlider;
+    const tradeIn = form.tradeInYes ? form.tradeInDetails.trim() || null : null;
+
+    const payload = {
+      name: form.name.trim(),
+      confidence: form.confidence,
+      experience,
+      usage,
+      priorities,
+      budget,
+      timeline: form.timeline,
+      tradeIn,
+      followUpPreference: form.followUp,
+      context: form.context.trim(),
+      email: form.email.trim(),
+      intent: form.timeline === "Just exploring" ? "Just browsing" : "Looking to buy new",
+      model: "Not sure yet",
+      paymentMethod: "Finance",
+      purchaseStyle: experience,
+      extraNotes: [
+        `Confidence: ${confidenceCopy[form.confidence]}`,
+        usage.length ? `Usage: ${usage.join(", ")}` : "",
+        priorities.length ? `Priorities: ${priorities.join(", ")}` : "",
+        `Preferred follow-up: ${form.followUp}`,
+      ]
+        .filter(Boolean)
+        .join(" | "),
+    };
+
     onSubmitted?.({ customerName: payload.name });
 
     fetch(`${apiUrl}/analyze`, {
@@ -277,264 +225,295 @@ export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroun
       });
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="overflow-hidden rounded-[28px] border border-[#d8dfeb] bg-[#f3f6fb] shadow-xl">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d8dfeb] bg-white px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-[#2a6fcd] text-center text-sm font-bold leading-10 text-white">MM</div>
-          <div>
-            <p className="text-sm font-semibold tracking-wide text-[#1b4e96]">MARK MILLER SUBARU SOUTH TOWNE</p>
-            <p className="text-lg font-semibold text-slate-900">AI Shopping Assistant</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={loadDemo}
-          className="rounded-full border border-[#b8cae5] bg-white px-4 py-2 text-sm font-semibold text-[#1b4e96] hover:border-[#2a6fcd]"
-        >
-          Load Demo
-        </button>
-        {demoLoadedLabel && (
-          <p className="w-full text-xs font-semibold text-[#1b4e96]">
-            Loaded demo profile: {demoLoadedLabel}
-          </p>
-        )}
-      </header>
-
-      <div className="space-y-1 px-4 py-5 md:px-6">
-        <AssistantBubble>Hey there, welcome in. What should we call you?</AssistantBubble>
-        {!nameDone && (
-          <div className="mb-5 ml-12">
-            <div className="flex gap-2">
-              <input
-                className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
-                placeholder="First name"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    submitName();
-                  }
-                }}
-                required
-              />
-              <button
-                type="button"
-                onClick={submitName}
-                className="rounded-2xl bg-[#2a6fcd] px-4 py-3 text-sm font-semibold text-white"
-              >
-                Send
-              </button>
-            </div>
-          </div>
-        )}
-        {nameDone && <UserBubble>{form.name}</UserBubble>}
-
-        {nameDone && (
-          <>
-            <AssistantBubble>What brings you in today?</AssistantBubble>
-            <ChoiceChips options={intents} value={form.intent} onChange={(value) => setField("intent", value)} />
-          </>
-        )}
-        {intentDone && <UserBubble>{form.intent}</UserBubble>}
-
-        {intentDone && (
-          <>
-            <AssistantBubble>Which model caught your eye?</AssistantBubble>
-            <ChoiceChips
-              options={models}
-              value={form.model}
-              onChange={(value) => setField("model", value)}
-              columns="sm:grid-cols-3"
+  const question = (() => {
+    switch (step) {
+      case 0:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-[#1a3a6b]">What's your name?</h2>
+            <input
+              className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#1a3a6b]"
+              placeholder="First name"
+              value={form.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              autoFocus
             />
-          </>
-        )}
-        {modelDone && <UserBubble>{form.model}</UserBubble>}
-
-        {modelDone && (
-          <>
-            <AssistantBubble>What budget range feels right?</AssistantBubble>
-            <ChoiceChips options={budgets} value={form.budget} onChange={(value) => setField("budget", value)} />
-          </>
-        )}
-        {budgetDone && <UserBubble>{form.budget}</UserBubble>}
-
-        {budgetDone && (
-          <>
-            <AssistantBubble>Do you have a trade-in?</AssistantBubble>
-            <ChoiceChips
-              options={["No", "Yes"]}
-              value={hasTradeIn === null ? "" : hasTradeIn ? "Yes" : "No"}
-              onChange={(value) => {
-                const yes = value === "Yes";
-                setHasTradeIn(yes);
-                if (!yes) {
-                  setField("tradeIn", "");
-                  setTradeInSubmitted(false);
-                  setTradeInInput("");
+          </div>
+        );
+      case 1:
+        return (
+          <div className="space-y-5">
+            <h2 className="text-2xl font-bold text-[#1a3a6b]">How are you feeling about the process?</h2>
+            <div>
+              <input
+                type="range"
+                min="1"
+                max="5"
+                step="1"
+                value={form.confidence}
+                onChange={(e) => updateField("confidence", Number(e.target.value))}
+                className="h-2 w-full cursor-pointer accent-[#1a3a6b]"
+              />
+              <div className="mt-2 flex justify-between text-xs text-slate-500">
+                <span>A little nervous, new to this</span>
+                <span>Somewhere in the middle</span>
+                <span className="text-right">Confident, I know what I want</span>
+              </div>
+            </div>
+            <p className="rounded-xl bg-[#edf3ff] px-4 py-3 text-sm font-semibold text-[#1a3a6b]">{confidenceCopy[form.confidence]}</p>
+          </div>
+        );
+      case 2:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-[#1a3a6b]">What kind of experience are you hoping for?</h2>
+            <div className="grid gap-3">
+              {experienceButtons.map((option) => (
+                <PrimaryButton
+                  key={option}
+                  active={form.experienceChoice === option}
+                  onClick={() => setForm((prev) => ({ ...prev, experienceChoice: option, experienceText: "" }))}
+                >
+                  {option}
+                </PrimaryButton>
+              ))}
+              <input
+                className="min-h-12 w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-base outline-none focus:border-[#1a3a6b]"
+                placeholder="e.g. I just want someone to make it quick and simple for me"
+                value={form.experienceText}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    experienceText: e.target.value,
+                    experienceChoice: e.target.value.trim() ? "" : prev.experienceChoice,
+                  }))
                 }
-              }}
-              columns="grid-cols-2 max-w-[320px]"
-            />
-          </>
-        )}
-
-        {hasTradeIn && !tradeInSubmitted && (
-          <div className="mb-6 ml-12 animate-fadeUp">
-            <div className="flex gap-2">
-              <input
-                className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
-                placeholder="e.g. 2019 Honda Pilot, 61000 miles, Good"
-                value={tradeInInput}
-                onChange={(e) => setTradeInInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    submitTradeIn();
-                  }
-                }}
               />
-              <button
-                type="button"
-                onClick={submitTradeIn}
-                className="rounded-2xl bg-[#2a6fcd] px-4 py-3 text-sm font-semibold text-white"
-              >
-                Send
-              </button>
             </div>
           </div>
-        )}
-        {tradeAnswered && tradeDone && (
-          <UserBubble>{hasTradeIn ? form.tradeIn || "Yes, I have a trade-in." : "No trade-in."}</UserBubble>
-        )}
-
-        {tradeAnswered && tradeDone && (
-          <>
-            <AssistantBubble>How are you planning to pay?</AssistantBubble>
-            <ChoiceChips options={paymentMethods} value={form.paymentMethod} onChange={(value) => setField("paymentMethod", value)} />
-          </>
-        )}
-        {paymentDone && <UserBubble>{form.paymentMethod}</UserBubble>}
-
-        {paymentDone && (
-          <>
-            <AssistantBubble>How soon are you looking to decide?</AssistantBubble>
-            <ChoiceChips options={timelines} value={form.timeline} onChange={(value) => setField("timeline", value)} />
-          </>
-        )}
-        {timelineDone && <UserBubble>{form.timeline}</UserBubble>}
-
-        {timelineDone && (
-          <>
-            <AssistantBubble>Is this your first time buying a vehicle?</AssistantBubble>
-            <ChoiceChips options={firstTimeChoices} value={form.firstTimeBuyer} onChange={(value) => setField("firstTimeBuyer", value)} />
-          </>
-        )}
-        {firstTimeDone && <UserBubble>{form.firstTimeBuyer}</UserBubble>}
-
-        {firstTimeDone && (
-          <>
-            <AssistantBubble>Have you owned a new vehicle before?</AssistantBubble>
-            <ChoiceChips options={ownedNewChoices} value={form.ownedNewVehicle} onChange={(value) => setField("ownedNewVehicle", value)} columns="grid-cols-3" />
-          </>
-        )}
-        {ownedNewDone && <UserBubble>{form.ownedNewVehicle}</UserBubble>}
-
-        {ownedNewDone && (
-          <>
-            <AssistantBubble>How do you like to shop?</AssistantBubble>
-            <ChoiceChips options={purchaseStyles} value={form.purchaseStyle} onChange={(value) => setField("purchaseStyle", value)} />
-          </>
-        )}
-        {purchaseStyleDone && <UserBubble>{form.purchaseStyle}</UserBubble>}
-
-        {purchaseStyleDone && (
-          <>
-            <AssistantBubble>
-              Tell us about your life and how you will use this vehicle. The more specific you are, the better we can match you.
-            </AssistantBubble>
-            {!contextDone && (
-              <div className="mb-5 ml-12">
-                <textarea
-                  className="min-h-[130px] w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
-                  placeholder="Kids, pets, commute, ski trips, camping, city driving, anything that matters."
-                  value={contextInput}
-                  onChange={(e) => setContextInput(e.target.value)}
-                  required
-                />
-                <div className="mt-2 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={submitContext}
-                    className="rounded-2xl bg-[#2a6fcd] px-4 py-2 text-sm font-semibold text-white"
-                  >
-                    Send
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-        {contextDone && <UserBubble>{form.context}</UserBubble>}
-
-        {contextDone && (
-          <>
-            <AssistantBubble>Anything else we should know before matching you?</AssistantBubble>
-            {!extraNotesSubmitted && (
-              <div className="mb-5 ml-12">
-                <textarea
-                  className="min-h-[110px] w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
-                  placeholder="Optional: deal breakers, must-have features, service expectations, etc."
-                  value={extraNotesInput}
-                  onChange={(e) => setExtraNotesInput(e.target.value)}
-                />
-                <div className="mt-2 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={submitExtraNotes}
-                    className="rounded-2xl border border-[#2a6fcd] bg-white px-4 py-2 text-sm font-semibold text-[#1b4e96]"
-                  >
-                    Save Note
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-        {extraNotesSubmitted && form.extraNotes && <UserBubble>{form.extraNotes}</UserBubble>}
-
-        {contextDone && (
-          <>
-            <AssistantBubble>Want a personalized follow-up email? (Optional)</AssistantBubble>
-            <div className="mb-3 ml-12">
+        );
+      case 3:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-[#1a3a6b]">How will you use it most?</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {usageButtons.map((option) => (
+                <PrimaryButton key={option} active={form.usageChoices.includes(option)} onClick={() => toggleMulti("usageChoices", option)}>
+                  {option}
+                </PrimaryButton>
+              ))}
+            </div>
+            <input
+              className="min-h-12 w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-base outline-none focus:border-[#1a3a6b]"
+              placeholder="e.g. school runs and weekend ski trips"
+              value={form.usageText}
+              onChange={(e) => updateField("usageText", e.target.value)}
+            />
+          </div>
+        );
+      case 4:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-[#1a3a6b]">What matters most to you?</h2>
+            <p className="text-sm text-slate-500">Select up to 2</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {priorityButtons.map((option) => (
+                <PrimaryButton key={option} active={form.priorityChoices.includes(option)} onClick={() => togglePriorities(option)}>
+                  {option}
+                </PrimaryButton>
+              ))}
+            </div>
+            <input
+              className="min-h-12 w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-base outline-none focus:border-[#1a3a6b]"
+              placeholder="e.g. something easy to park and good in snow"
+              value={form.priorityText}
+              onChange={(e) => updateField("priorityText", e.target.value)}
+            />
+          </div>
+        );
+      case 5:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-[#1a3a6b]">What's your budget?</h2>
+            <p className="text-lg font-semibold text-[#1a3a6b]">
+              {typeof form.budgetSlider === "number" ? `My budget is around ${formatBudget(form.budgetSlider)}` : "Type a budget below"}
+            </p>
+            <input
+              type="range"
+              min="15000"
+              max="70000"
+              step="5000"
+              value={form.budgetSlider ?? 15000}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  budgetSlider: Number(e.target.value),
+                  budgetText: "",
+                }))
+              }
+              className="h-2 w-full cursor-pointer accent-[#1a3a6b]"
+            />
+            <div className="flex justify-between text-xs text-slate-500">
+              <span>$15,000</span>
+              <span>$70,000+</span>
+            </div>
+            <input
+              className="min-h-12 w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-base outline-none focus:border-[#1a3a6b]"
+              placeholder="or type it: 'around $30k' or 'not sure yet'"
+              value={form.budgetText}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  budgetText: e.target.value,
+                  budgetSlider: e.target.value.trim() ? null : prev.budgetSlider,
+                }))
+              }
+            />
+          </div>
+        );
+      case 6:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-[#1a3a6b]">How soon are you deciding?</h2>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {timelineButtons.map((option) => (
+                <PrimaryButton key={option} active={form.timeline === option} onClick={() => updateField("timeline", option)}>
+                  {option}
+                </PrimaryButton>
+              ))}
+            </div>
+          </div>
+        );
+      case 7:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-[#1a3a6b]">Do you have a trade-in?</h2>
+            <div className="grid max-w-sm grid-cols-2 gap-3">
+              <PrimaryButton
+                active={!form.tradeInYes}
+                onClick={() => setForm((prev) => ({ ...prev, tradeInYes: false, tradeInDetails: "" }))}
+              >
+                No
+              </PrimaryButton>
+              <PrimaryButton active={form.tradeInYes} onClick={() => updateField("tradeInYes", true)}>
+                Yes
+              </PrimaryButton>
+            </div>
+            <div className={`overflow-hidden transition-all duration-300 ${form.tradeInYes ? "max-h-28 opacity-100" : "max-h-0 opacity-0"}`}>
+              <input
+                className="min-h-12 w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-base outline-none focus:border-[#1a3a6b]"
+                placeholder="Year, make & model — e.g. 2019 Honda Pilot"
+                value={form.tradeInDetails}
+                onChange={(e) => updateField("tradeInDetails", e.target.value)}
+              />
+            </div>
+          </div>
+        );
+      case 8:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-[#1a3a6b]">How would you prefer we follow up?</h2>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {followUpButtons.map((option) => (
+                <PrimaryButton key={option} active={form.followUp === option} onClick={() => updateField("followUp", option)}>
+                  {option}
+                </PrimaryButton>
+              ))}
+            </div>
+          </div>
+        );
+      case 9:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-[#1a3a6b]">
+              Tell us about your life and what you need this vehicle to make possible.
+            </h2>
+            <textarea
+              className="min-h-[120px] w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-base outline-none focus:border-[#1a3a6b]"
+              placeholder="e.g. school drop-offs, 30 min commute, weekend ski trips. First time buying on my own — want something I feel confident in."
+              value={form.context}
+              onChange={(e) => updateField("context", e.target.value)}
+            />
+            <p className="text-sm text-slate-500">Even a few words help us match you to the right person.</p>
+            <div className="rounded-2xl border border-[#d8dfeb] bg-white p-4">
+              <label className="mb-1 block text-sm font-semibold text-[#1a3a6b]">Email for your personalized specialist introduction</label>
+              <p className="mb-3 text-xs text-slate-500">Optional — we'll send one thoughtful email, no spam ever.</p>
               <input
                 type="email"
-                className="w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+                className="min-h-12 w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-base outline-none focus:border-[#1a3a6b]"
                 placeholder="Email address"
                 value={form.email}
-                onChange={(e) => setField("email", e.target.value)}
+                onChange={(e) => updateField("email", e.target.value)}
               />
-              <p className="mt-2 text-sm text-slate-500">We send one thoughtful message, no spam.</p>
             </div>
-          </>
-        )}
+          </div>
+        );
+      default:
+        return null;
+    }
+  })();
+
+  return (
+    <form onSubmit={handleSubmit} className="overflow-hidden rounded-[28px] border border-[#d8dfeb] bg-white shadow-xl">
+      <header className="border-b border-[#d8dfeb] bg-white px-5 py-4 md:px-7">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-[#1a3a6b] text-center text-sm font-bold leading-10 text-white">MM</div>
+            <div>
+              <p className="text-sm font-semibold tracking-wide text-[#1a3a6b]">MARK MILLER SUBARU SOUTH TOWNE</p>
+              <p className="text-lg font-semibold text-slate-900">AI Shopping Assistant</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={loadDemo}
+            className="min-h-12 rounded-full border border-[#b8cae5] bg-white px-4 py-2 text-sm font-semibold text-[#1a3a6b] hover:border-[#1a3a6b]"
+          >
+            Load Demo
+          </button>
+        </div>
+        {demoLoadedLabel && <p className="mt-2 text-xs font-semibold text-[#1a3a6b]">Loaded demo profile: {demoLoadedLabel}</p>}
+
+        <div className="mt-4">
+          <div className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-500">
+            <span>Step {step + 1} of {TOTAL_STEPS}</span>
+            <span>{Math.round(((step + 1) / TOTAL_STEPS) * 100)}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[#dbe4f3]">
+            <div
+              className="h-2 rounded-full bg-[#1a3a6b] transition-all duration-300"
+              style={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }}
+            />
+          </div>
+        </div>
+      </header>
+
+      <div className="bg-[#f7faff] px-5 py-6 md:px-7 md:py-8">
+        <div key={step} className={direction >= 0 ? "question-slide-forward" : "question-slide-back"}>
+          {question}
+        </div>
       </div>
 
-      <footer className="border-t border-[#d8dfeb] bg-white px-5 py-4">
-        {error && <p className="mb-3 rounded-lg bg-red-50 p-3 text-red-700">{error}</p>}
-        <button
-          disabled={loading || !pipelineComplete || !extraNotesDone}
-          type="submit"
-          className="w-full rounded-2xl bg-[#2a6fcd] px-4 py-3 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? "Analyzing your inquiry..." : pipelineComplete ? "Send to Specialist Team" : "Complete the steps above"}
-        </button>
-        {loading && (
-          <div className="mt-3 h-2 w-full overflow-hidden rounded bg-[#d3deef]">
-            <div className="h-2 w-1/3 animate-pulse rounded bg-[#2a6fcd]" />
-          </div>
-        )}
+      <footer className="border-t border-[#d8dfeb] bg-white px-5 py-4 md:px-7">
+        {error && <p className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={goBack}
+            disabled={step === 0 || loading}
+            className="min-h-12 rounded-2xl border border-[#b8cae5] bg-white px-5 text-sm font-semibold text-[#1a3a6b] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Back
+          </button>
+          <button
+            type={step === TOTAL_STEPS - 1 ? "submit" : "button"}
+            onClick={step === TOTAL_STEPS - 1 ? undefined : goNext}
+            disabled={!canProceed || loading}
+            className="min-h-12 flex-1 rounded-2xl bg-[#1a3a6b] px-5 text-base font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Sending..." : step === TOTAL_STEPS - 1 ? "Send to Specialist Team" : "Next"}
+          </button>
+        </div>
       </footer>
     </form>
   );

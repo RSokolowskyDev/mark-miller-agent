@@ -15,3 +15,33 @@ body {
   margin: 0;
   min-height: 100vh;
 }
+
+@keyframes questionSlideForward {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes questionSlideBack {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.question-slide-forward {
+  animation: questionSlideForward 0.28s ease both;
+}
+
+.question-slide-back {
+  animation: questionSlideBack 0.28s ease both;
+}
