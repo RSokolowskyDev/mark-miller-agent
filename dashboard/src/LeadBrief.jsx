@@ -5,7 +5,6 @@ const statuses = ["new", "contacted", "appointment", "converted", "lost"];
 export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
   const [status, setStatus] = useState(lead.status || "new");
   const [vehicle, setVehicle] = useState(lead.recommended_model || "");
-  const [email, setEmail] = useState(lead.email || "");
   const [message, setMessage] = useState("");
 
   const saveStatus = async (nextStatus) => {
@@ -22,11 +21,14 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
     const response = await fetch(`${apiUrl}/leads/${lead.id}/convert`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, vehicle }),
+      body: JSON.stringify({ vehicle }),
     });
     if (response.ok) {
       setMessage("Conversion confirmed. Email sequence triggered.");
       onUpdated();
+    } else {
+      const data = await response.json().catch(() => ({}));
+      setMessage(data.detail || "Could not trigger conversion sequence.");
     }
   };
 
@@ -35,7 +37,7 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        to: email,
+        to: lead.email || "",
         subject: lead.email_subject,
         htmlBody: lead.email_html,
         body: lead.email_body,
@@ -95,7 +97,7 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
             <h3 className="mb-2 text-sm font-semibold">Convert Lead</h3>
             <div className="grid gap-2">
               <input className="rounded border px-3 py-2 text-xs" placeholder="Vehicle purchased" value={vehicle} onChange={(e) => setVehicle(e.target.value)} />
-              <input className="rounded border px-3 py-2 text-xs" placeholder="Customer email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input className="rounded border bg-slate-50 px-3 py-2 text-xs text-slate-600" value={lead.email || "No email captured on this lead"} readOnly />
             </div>
           </section>
         </div>

@@ -35,7 +35,7 @@ class StatusUpdate(BaseModel):
 
 
 class ConvertRequest(BaseModel):
-    email: str
+    email: Optional[str] = None
     vehicle: str
 
 
@@ -117,8 +117,19 @@ async def patch_status(lead_id: str, request: StatusUpdate):
 
 @app.post("/leads/{lead_id}/convert")
 async def convert(lead_id: str, request: ConvertRequest, background_tasks: BackgroundTasks):
+    lead_item = get_lead(lead_id)
+    if not lead_item:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    sequence_email = (lead_item.get("email") or request.email or "").strip()
+    if not sequence_email:
+        raise HTTPException(
+            status_code=400,
+            detail="No customer email is saved on this lead. Add it in the form before conversion.",
+        )
+
     mark_converted(lead_id)
-    background_tasks.add_task(trigger_post_sale_sequence, lead_id, request.email, request.vehicle)
+    background_tasks.add_task(trigger_post_sale_sequence, lead_id, sequence_email, request.vehicle)
     return {"success": True, "message": "Sequence triggered"}
 
 
