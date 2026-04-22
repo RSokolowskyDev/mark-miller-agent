@@ -1,5 +1,4 @@
 export default function ThankYou({ result }) {
-  const specialist = result?.assessment?.assignedSpecialist || "our team";
   const name = result?.customerName || "there";
   const pending = Boolean(result?.pending);
   const error = result?.error || "";
@@ -11,7 +10,7 @@ export default function ThankYou({ result }) {
       <p className="mx-auto mt-4 max-w-xl text-lg text-slate-700">
         {pending
           ? "Your request was received. We are matching you with the best specialist now."
-          : `${specialist} is reviewing your information and will be in touch shortly.`}
+          : "We are reviewing your information and will be in touch shortly."}
       </p>
       {pending && <p className="mx-auto mt-2 max-w-xl text-sm text-slate-500">You can close this page any time.</p>}
       {error && <p className="mx-auto mt-4 max-w-xl rounded-lg bg-amber-50 p-3 text-sm text-amber-800">{error}</p>}

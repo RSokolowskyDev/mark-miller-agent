@@ -46,7 +46,7 @@ export default function App() {
   const [view, setView] = useState("Pipeline");
   const [leads, setLeads] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
-  const [selectedRep, setSelectedRep] = useState(null);
+  const [expandedReps, setExpandedReps] = useState({});
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const apiUrl = useMemo(() => import.meta.env.VITE_API_URL || "http://localhost:8000", []);
@@ -96,6 +96,7 @@ export default function App() {
       const existing = map.get(key);
       if (existing) {
         existing.assignedLeads += 1;
+        existing.leads = [...(existing.leads || []), lead];
         return;
       }
 
@@ -106,11 +107,21 @@ export default function App() {
         interests: (profile.strengths || []).slice(0, 3),
         focus: String(profile.whyMatch || "Matched to customer lifestyle and buying goals."),
         assignedLeads: 1,
+        leads: [lead],
       });
     });
 
-    return Array.from(map.values()).sort((a, b) => b.assignedLeads - a.assignedLeads || a.name.localeCompare(b.name));
+    return Array.from(map.values())
+      .map((rep) => ({
+        ...rep,
+        leads: (rep.leads || []).sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)),
+      }))
+      .sort((a, b) => b.assignedLeads - a.assignedLeads || a.name.localeCompare(b.name));
   }, [leads]);
+
+  const toggleRep = (name) => {
+    setExpandedReps((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
 
   return (
     <div className="flex min-h-screen bg-[#f3f6fb]">
@@ -135,16 +146,52 @@ export default function App() {
         <div className="mt-6 border-t border-[#2f3f63] pt-4">
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-300">Sales Rep Profiles</p>
           <div className="max-h-[280px] space-y-1.5 overflow-y-auto pr-1">
-            {repProfiles.map((rep) => (
-              <button
-                key={rep.name}
-                onClick={() => setSelectedRep(rep)}
-                className="w-full rounded-md border border-[#2f3f63] bg-[#1f2e4f] px-2.5 py-2 text-left hover:border-[#5b75ad]"
-              >
-                <p className="text-sm font-semibold text-white">{rep.name}</p>
-                <p className="text-[11px] text-slate-300">{rep.title}</p>
-              </button>
-            ))}
+            {repProfiles.map((rep) => {
+              const isOpen = Boolean(expandedReps[rep.name]);
+              return (
+                <div key={rep.name} className="rounded-md border border-[#2f3f63] bg-[#1f2e4f]">
+                  <button
+                    onClick={() => toggleRep(rep.name)}
+                    className="w-full px-2.5 py-2 text-left hover:bg-[#243250]"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{rep.name}</p>
+                        <p className="text-[11px] text-slate-300">{rep.title}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] font-semibold text-slate-200">{rep.assignedLeads}</p>
+                        <p className="text-[10px] text-slate-400">{isOpen ? "Hide" : "Show"}</p>
+                      </div>
+                    </div>
+                  </button>
+                  {isOpen && (
+                    <div className="border-t border-[#31456f] bg-[#192846] p-2">
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-300">Experience</p>
+                      <p className="mb-2 text-[11px] text-slate-200">{rep.experience}</p>
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-300">Assigned Leads</p>
+                      <div className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
+                        {(rep.leads || []).length === 0 && (
+                          <p className="text-[11px] text-slate-400">No leads assigned yet.</p>
+                        )}
+                        {(rep.leads || []).map((lead) => (
+                          <button
+                            key={lead.id}
+                            onClick={() => setSelectedLead(lead)}
+                            className="w-full rounded border border-[#3b4f79] bg-[#22345a] px-2 py-1.5 text-left hover:border-[#6d89c7]"
+                          >
+                            <p className="text-xs font-semibold text-white">{lead.name}</p>
+                            <p className="line-clamp-2 text-[10px] text-slate-200">
+                              {lead.routing_reason || lead.summary || "Matched based on profile fit and goals."}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
         <div className="mt-8 rounded-md border border-[#2f3f63] bg-[#1f2e4f] p-2 text-xs text-slate-300">
@@ -257,52 +304,6 @@ export default function App() {
           onClose={() => setSelectedLead(null)}
           onUpdated={fetchLeads}
         />
-      )}
-
-      {selectedRep && (
-        <div className="fixed inset-0 z-40 bg-black/45 p-4" onClick={() => setSelectedRep(null)}>
-          <div
-            className="mx-auto mt-10 max-w-xl rounded-xl border border-[#d9e2f0] bg-white p-5 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">{selectedRep.name}</h3>
-                <p className="text-sm text-slate-600">{selectedRep.title}</p>
-              </div>
-              <button
-                onClick={() => setSelectedRep(null)}
-                className="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700"
-              >
-                Close
-              </button>
-            </div>
-            <div className="space-y-3 text-sm text-slate-700">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Experience</p>
-                <p>{selectedRep.experience}</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Interests & Strengths</p>
-                <div className="mt-1 flex flex-wrap gap-2">
-                  {(selectedRep.interests || []).map((interest) => (
-                    <span key={interest} className="rounded-full bg-[#eef4ff] px-2 py-1 text-xs font-medium text-[#1b4e96]">
-                      {interest}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Best Fit</p>
-                <p>{selectedRep.focus}</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Assigned Leads</p>
-                <p>{selectedRep.assignedLeads || 0}</p>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

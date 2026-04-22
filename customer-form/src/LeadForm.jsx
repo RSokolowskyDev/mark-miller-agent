@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+ï»¿import { useMemo, useState } from "react";
 
 const TOTAL_STEPS = 10;
 const experienceButtons = [
@@ -35,7 +35,7 @@ const demoProfile = {
   tradeInDetails: "2019 Honda Pilot",
   followUp: "Email",
   context:
-    "I have three kids and two dogs — a lab and a golden. We ski up Little Cottonwood Canyon almost every weekend in winter. Need something with AWD, good cargo space, and that can handle Utah snow. My husband drives a truck so this would be the main family car. We also camp near Moab in the summer.",
+    "I have three kids and two dogs - a lab and a golden. We ski up Little Cottonwood Canyon almost every weekend in winter. Need something with AWD, good cargo space, and that can handle Utah snow. My husband drives a truck so this would be the main family car. We also camp near Moab in the summer.",
   email: "",
 };
 
@@ -43,6 +43,12 @@ function formatBudget(value) {
   if (value === null || value === undefined) return "";
   if (value >= 70000) return "$70,000+";
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+}
+
+function isValidEmail(value) {
+  const email = String(value || "").trim();
+  if (!email) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function stepIsValid(step, form) {
@@ -66,7 +72,7 @@ function stepIsValid(step, form) {
     case 8:
       return Boolean(form.followUp);
     case 9:
-      return true;
+      return isValidEmail(form.email);
     default:
       return false;
   }
@@ -166,6 +172,11 @@ export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroun
     if (loading) return;
     if (step < TOTAL_STEPS - 1) {
       goNext();
+      return;
+    }
+
+    if (!isValidEmail(form.email)) {
+      setError("Please enter a valid email address before submitting.");
       return;
     }
 
@@ -402,7 +413,7 @@ export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroun
             <div className={`overflow-hidden transition-all duration-300 ${form.tradeInYes ? "max-h-28 opacity-100" : "max-h-0 opacity-0"}`}>
               <input
                 className="min-h-12 w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-base outline-none focus:border-[#1a3a6b]"
-                placeholder="Year, make & model — e.g. 2019 Honda Pilot"
+                placeholder="Year, make & model - e.g. 2019 Honda Pilot"
                 value={form.tradeInDetails}
                 onChange={(e) => updateField("tradeInDetails", e.target.value)}
               />
@@ -430,21 +441,25 @@ export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroun
             </h2>
             <textarea
               className="min-h-[120px] w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-base outline-none focus:border-[#1a3a6b]"
-              placeholder="e.g. school drop-offs, 30 min commute, weekend ski trips. First time buying on my own — want something I feel confident in."
+              placeholder="e.g. school drop-offs, 30 min commute, weekend ski trips. First time buying on my own - want something I feel confident in."
               value={form.context}
               onChange={(e) => updateField("context", e.target.value)}
             />
             <p className="text-sm text-slate-500">Even a few words help us match you to the right person.</p>
             <div className="rounded-2xl border border-[#d8dfeb] bg-white p-4">
               <label className="mb-1 block text-sm font-semibold text-[#1a3a6b]">Email for your personalized specialist introduction</label>
-              <p className="mb-3 text-xs text-slate-500">Optional — we'll send one thoughtful email, no spam ever.</p>
+              <p className="mb-3 text-xs text-slate-500">Required - we will send one thoughtful email, no spam ever.</p>
               <input
                 type="email"
                 className="min-h-12 w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-base outline-none focus:border-[#1a3a6b]"
                 placeholder="Email address"
                 value={form.email}
                 onChange={(e) => updateField("email", e.target.value)}
+                required
               />
+              {form.email.trim() && !isValidEmail(form.email) && (
+                <p className="mt-2 text-xs font-semibold text-red-600">Enter a valid email to continue.</p>
+              )}
             </div>
           </div>
         );
