@@ -9,22 +9,93 @@ const firstTimeChoices = ["Yes, first time", "No, I have bought before", "It has
 const ownedNewChoices = ["Yes", "No", "Not sure"];
 const purchaseStyles = ["I want guidance", "I like to compare details", "I want the fastest process"];
 
-const demoData = {
-  name: "Sarah",
-  intent: "Looking to buy new",
-  model: "Outback",
-  budget: "$35-45k",
-  tradeIn: "2019 Honda Pilot, 2019, 61000 miles, Good",
-  paymentMethod: "Finance",
-  timeline: "This month",
-  firstTimeBuyer: "No, I have bought before",
-  ownedNewVehicle: "Yes",
-  purchaseStyle: "I like to compare details",
-  context:
-    "I have three kids and two dogs - a lab and a golden. We ski up Little Cottonwood Canyon almost every weekend in winter. Need something with AWD, good cargo space, and that can handle Utah snow. My husband drives a truck so this would be the main family car. We also do a lot of camping in the summer out near Moab.",
-  extraNotes: "I care most about safety tech and long-term reliability.",
-  email: "",
-};
+const demoProfiles = [
+  {
+    profileLabel: "Family Weekend Adventurer",
+    name: "Sarah",
+    intent: "Looking to buy new",
+    model: "Outback",
+    budget: "$35-45k",
+    tradeIn: "2019 Honda Pilot, 61000 miles, Good",
+    paymentMethod: "Finance",
+    timeline: "This month",
+    firstTimeBuyer: "No, I have bought before",
+    ownedNewVehicle: "Yes",
+    purchaseStyle: "I like to compare details",
+    context:
+      "I have three kids and two dogs. We ski up Little Cottonwood Canyon most winter weekends and camp near Moab in summer. Need AWD, reliable safety tech, and strong cargo space for family gear.",
+    extraNotes: "Would love driver-assist features and easy car-seat setup.",
+    email: "",
+  },
+  {
+    profileLabel: "First-Time City Buyer",
+    name: "Nina",
+    intent: "Looking to buy new",
+    model: "Crosstrek",
+    budget: "$25-35k",
+    tradeIn: "",
+    paymentMethod: "Lease",
+    timeline: "This week",
+    firstTimeBuyer: "Yes, first time",
+    ownedNewVehicle: "No",
+    purchaseStyle: "I want guidance",
+    context:
+      "First time buying my own car. I mostly commute downtown and visit family on weekends. I want something safe, easy to park, and simple to understand.",
+    extraNotes: "Please explain trim differences in plain language.",
+    email: "",
+  },
+  {
+    profileLabel: "Used + Trade-In Value Shopper",
+    name: "Marcus",
+    intent: "Looking for used",
+    model: "Forester",
+    budget: "Under $25k",
+    tradeIn: "2013 Ford Escape, 132000 miles, Fair",
+    paymentMethod: "Cash",
+    timeline: "This week",
+    firstTimeBuyer: "No, I have bought before",
+    ownedNewVehicle: "Not sure",
+    purchaseStyle: "I want the fastest process",
+    context:
+      "I need the best value possible and a fast transaction. Main use is school drop-offs and work commute with occasional mountain weather driving.",
+    extraNotes: "I want to understand total out-the-door numbers clearly.",
+    email: "",
+  },
+  {
+    profileLabel: "Performance Enthusiast",
+    name: "Evan",
+    intent: "Looking to buy new",
+    model: "WRX",
+    budget: "$35-45k",
+    tradeIn: "",
+    paymentMethod: "Finance",
+    timeline: "This month",
+    firstTimeBuyer: "It has been a while",
+    ownedNewVehicle: "Yes",
+    purchaseStyle: "I like to compare details",
+    context:
+      "I care about handling, power delivery, and daily drivability. I want to compare trims and feature packages side by side before deciding.",
+    extraNotes: "Interested in warranty and maintenance expectations.",
+    email: "",
+  },
+  {
+    profileLabel: "EV-Curious Tech Professional",
+    name: "Priya",
+    intent: "Just browsing",
+    model: "Solterra",
+    budget: "$45k+",
+    tradeIn: "2020 Toyota RAV4 Hybrid, 42000 miles, Very Good",
+    paymentMethod: "Finance",
+    timeline: "Just exploring",
+    firstTimeBuyer: "No, I have bought before",
+    ownedNewVehicle: "Yes",
+    purchaseStyle: "I want guidance",
+    context:
+      "I am considering my first EV and want help understanding charging, winter range, and whether it fits my weekly commute plus ski trips.",
+    extraNotes: "Would like transparent pros/cons versus gas models.",
+    email: "",
+  },
+];
 
 function AssistantBubble({ children }) {
   return (
@@ -96,6 +167,8 @@ export default function LeadForm({ onSuccess }) {
   const [extraNotesSubmitted, setExtraNotesSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [demoLoadedLabel, setDemoLoadedLabel] = useState("");
+  const [lastDemoIndex, setLastDemoIndex] = useState(-1);
   const apiUrl = useMemo(() => import.meta.env.VITE_API_URL || "http://localhost:8000", []);
 
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -129,14 +202,23 @@ export default function LeadForm({ onSuccess }) {
     contextDone;
 
   const loadDemo = () => {
-    setHasTradeIn(true);
+    let nextIndex = Math.floor(Math.random() * demoProfiles.length);
+    if (demoProfiles.length > 1 && nextIndex === lastDemoIndex) {
+      nextIndex = (nextIndex + 1) % demoProfiles.length;
+    }
+    const demoData = demoProfiles[nextIndex];
+    const hasTrade = Boolean((demoData.tradeIn || "").trim());
+
+    setLastDemoIndex(nextIndex);
+    setDemoLoadedLabel(demoData.profileLabel);
+    setHasTradeIn(hasTrade);
     setForm(demoData);
     setNameInput(demoData.name);
-    setTradeInInput(demoData.tradeIn);
+    setTradeInInput(demoData.tradeIn || "");
     setContextInput(demoData.context);
-    setExtraNotesInput(demoData.extraNotes);
+    setExtraNotesInput(demoData.extraNotes || "");
     setNameSubmitted(true);
-    setTradeInSubmitted(true);
+    setTradeInSubmitted(hasTrade);
     setContextSubmitted(true);
     setExtraNotesSubmitted(true);
   };
@@ -209,6 +291,11 @@ export default function LeadForm({ onSuccess }) {
         >
           Load Demo
         </button>
+        {demoLoadedLabel && (
+          <p className="w-full text-xs font-semibold text-[#1b4e96]">
+            Loaded demo profile: {demoLoadedLabel}
+          </p>
+        )}
       </header>
 
       <div className="space-y-1 px-4 py-5 md:px-6">
