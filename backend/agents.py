@@ -4,10 +4,13 @@ from crewai import Agent, LLM
 
 load_dotenv()
 
+groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
+if not groq_api_key:
+    raise RuntimeError("Missing GROQ_API_KEY. Add it to backend/.env before starting the backend.")
+
 llm = LLM(
-    model="openai/auto",
-    base_url=os.getenv("OPENAI_API_BASE", "http://localhost:3000/v1"),
-    api_key=os.getenv("OPENAI_API_KEY", "sk-gw-test"),
+    model=os.getenv("LLM_MODEL", "groq/llama-3.1-8b-instant"),
+    api_key=groq_api_key,
 )
 
 lead_analyst = Agent(

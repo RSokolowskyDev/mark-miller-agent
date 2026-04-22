@@ -2,8 +2,7 @@
 
 AI-powered lead scoring and follow-up email system built to demonstrate how AI agents can integrate with dealership operations.
 
-Built with CrewAI (two-agent pipeline), FastAPI, React, and Gmail.
-Routes through a local AI gateway - no external API costs.
+Built with CrewAI (two-agent pipeline), FastAPI, React, Groq, and Gmail.
 
 ## Live URLs
 - Customer Form: https://rsokolowskydev.github.io/mark-miller-agent/customer-form/
@@ -26,25 +25,20 @@ Routes through a local AI gateway - no external API costs.
 ### Prerequisites
 - Python 3.10-3.12
 - Node.js 18+
-- AI gateway running on port 3000 (separate repo)
+- Groq API key
 - Gmail account with App Password configured
 
 ### Setup
-Terminal 1 - AI Gateway (separate repo):
-```bash
-npm start
-```
-
-Terminal 2 - Backend:
+Terminal 1 - Backend:
 ```bash
 cd backend
 pip install -r requirements.txt
 cp .env.example .env
-# Fill in GMAIL_APP_PASSWORD in .env
+# Fill in GROQ_API_KEY and GMAIL_APP_PASSWORD in .env
 uvicorn main:app --reload --port 8000
 ```
 
-Terminal 3 - Customer Form:
+Terminal 2 - Customer Form:
 ```bash
 cd customer-form
 npm install
@@ -52,7 +46,7 @@ echo "VITE_API_URL=http://localhost:8000" > .env.local
 npm run dev
 ```
 
-Terminal 4 - Dashboard:
+Terminal 3 - Dashboard:
 ```bash
 cd dashboard
 npm install
@@ -69,7 +63,6 @@ npm run dev
 6. Deploy dashboard: `cd dashboard && npm run deploy`.
 
 ## Notes
-- The AI gateway is not included in this repo.
-- The OPENAI_ env var prefix is required by LiteLLM and does NOT imply direct OpenAI billing.
+- Set `GROQ_API_KEY` in backend `.env` (or in your cloud host env vars).
 - Gmail App Password is required (do not use your normal Gmail password).
 - `.env` files are gitignored and should never be committed.

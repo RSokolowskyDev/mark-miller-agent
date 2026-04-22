@@ -1,5 +1,6 @@
 crewai>=0.80.0
 crewai-tools
+litellm
 fastapi
 uvicorn
 python-dotenv

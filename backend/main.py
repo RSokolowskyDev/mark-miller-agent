@@ -135,5 +135,6 @@ async def manual_send_email(request: ManualEmailRequest):
 async def health():
     return {
         "status": "ok",
-        "gateway": os.getenv("OPENAI_API_BASE", "http://localhost:3000/v1"),
+        "provider": "groq",
+        "model": os.getenv("LLM_MODEL", "groq/llama-3.1-8b-instant"),
     }
