@@ -140,7 +140,7 @@ function ChoiceChips({ options, value, onChange, columns = "sm:grid-cols-2" }) {
   );
 }
 
-export default function LeadForm({ onSuccess }) {
+export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroundError }) {
   const [form, setForm] = useState({
     name: "",
     intent: "",
@@ -251,27 +251,30 @@ export default function LeadForm({ onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading || !pipelineComplete || !extraNotesDone) return;
     setLoading(true);
     setError("");
 
-    try {
-      const response = await fetch(`${apiUrl}/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+    const payload = { ...form };
+    onSubmitted?.({ customerName: payload.name });
 
-      if (!response.ok) {
-        const errPayload = await response.json().catch(() => ({}));
-        throw new Error(errPayload.detail || "We could not submit your request right now.");
-      }
-      const data = await response.json();
-      onSuccess({ ...data, customerName: form.name });
-    } catch (err) {
-      setError(err.message || "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    fetch(`${apiUrl}/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const errPayload = await response.json().catch(() => ({}));
+          throw new Error(errPayload.detail || "We could not submit your request right now.");
+        }
+        const data = await response.json();
+        onBackgroundSuccess?.({ ...data, customerName: payload.name });
+      })
+      .catch((err) => {
+        onBackgroundError?.(err.message || "We could not finish processing your request yet.");
+      });
   };
 
   return (

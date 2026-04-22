@@ -4,11 +4,49 @@ import LeadBrief from "./LeadBrief";
 import EmailLog from "./EmailLog";
 
 const navItems = ["Pipeline", "All Leads", "Email Log"];
+const baseRepProfiles = [
+  {
+    name: "Ryan Sokolowsky",
+    title: "Senior Product Specialist",
+    experience: "9 years in automotive sales and customer consulting",
+    interests: ["Family-fit vehicle matching", "Transparent financing", "Safety-first recommendations"],
+    focus: "Best for family buyers and customers comparing practical trim options",
+  },
+  {
+    name: "Alex Rivera",
+    title: "Customer Fit Specialist",
+    experience: "7 years helping first-time and returning buyers",
+    interests: ["First-time buyer coaching", "Lifestyle discovery", "Trade-in strategy"],
+    focus: "Best for customers who want guidance and confidence through every step",
+  },
+  {
+    name: "Jordan Mack",
+    title: "Vehicle Match Advisor",
+    experience: "6 years in model education and test-drive planning",
+    interests: ["Feature deep-dives", "Trim comparisons", "Ownership value planning"],
+    focus: "Best for detail-oriented customers who compare specs and features closely",
+  },
+  {
+    name: "Taylor Chen",
+    title: "Ownership Experience Specialist",
+    experience: "8 years in long-term ownership and retention",
+    interests: ["Service planning", "Warranty education", "Family comfort setup"],
+    focus: "Best for buyers focused on long-term reliability and ownership costs",
+  },
+  {
+    name: "Casey Patel",
+    title: "EV & Technology Specialist",
+    experience: "5 years focused on EV onboarding and connected tech",
+    interests: ["EV readiness", "Charging guidance", "Driver-assist technology"],
+    focus: "Best for EV-curious customers and tech-forward shoppers",
+  },
+];
 
 export default function App() {
   const [view, setView] = useState("Pipeline");
   const [leads, setLeads] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
+  const [selectedRep, setSelectedRep] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const apiUrl = useMemo(() => import.meta.env.VITE_API_URL || "http://localhost:8000", []);
@@ -46,6 +84,33 @@ export default function App() {
       ...item,
     }))
   );
+  const repProfiles = useMemo(() => {
+    const map = new Map(baseRepProfiles.map((rep) => [rep.name.toLowerCase(), { ...rep, assignedLeads: 0 }]));
+
+    leads.forEach((lead) => {
+      const profile = lead.specialist_profile || {};
+      const repName = String(profile.name || lead.assigned_specialist || "").trim();
+      if (!repName) return;
+
+      const key = repName.toLowerCase();
+      const existing = map.get(key);
+      if (existing) {
+        existing.assignedLeads += 1;
+        return;
+      }
+
+      map.set(key, {
+        name: repName,
+        title: String(profile.title || "Customer Fit Specialist"),
+        experience: "Experience available via recent routing performance",
+        interests: (profile.strengths || []).slice(0, 3),
+        focus: String(profile.whyMatch || "Matched to customer lifestyle and buying goals."),
+        assignedLeads: 1,
+      });
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.assignedLeads - a.assignedLeads || a.name.localeCompare(b.name));
+  }, [leads]);
 
   return (
     <div className="flex min-h-screen bg-[#f3f6fb]">
@@ -67,6 +132,21 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <div className="mt-6 border-t border-[#2f3f63] pt-4">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-300">Sales Rep Profiles</p>
+          <div className="max-h-[280px] space-y-1.5 overflow-y-auto pr-1">
+            {repProfiles.map((rep) => (
+              <button
+                key={rep.name}
+                onClick={() => setSelectedRep(rep)}
+                className="w-full rounded-md border border-[#2f3f63] bg-[#1f2e4f] px-2.5 py-2 text-left hover:border-[#5b75ad]"
+              >
+                <p className="text-sm font-semibold text-white">{rep.name}</p>
+                <p className="text-[11px] text-slate-300">{rep.title}</p>
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="mt-8 rounded-md border border-[#2f3f63] bg-[#1f2e4f] p-2 text-xs text-slate-300">
           <span className="mr-2 inline-block h-2 w-2 rounded-full bg-green-400" />
           Powered by AI Gateway
@@ -177,6 +257,52 @@ export default function App() {
           onClose={() => setSelectedLead(null)}
           onUpdated={fetchLeads}
         />
+      )}
+
+      {selectedRep && (
+        <div className="fixed inset-0 z-40 bg-black/45 p-4" onClick={() => setSelectedRep(null)}>
+          <div
+            className="mx-auto mt-10 max-w-xl rounded-xl border border-[#d9e2f0] bg-white p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">{selectedRep.name}</h3>
+                <p className="text-sm text-slate-600">{selectedRep.title}</p>
+              </div>
+              <button
+                onClick={() => setSelectedRep(null)}
+                className="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700"
+              >
+                Close
+              </button>
+            </div>
+            <div className="space-y-3 text-sm text-slate-700">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Experience</p>
+                <p>{selectedRep.experience}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Interests & Strengths</p>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {(selectedRep.interests || []).map((interest) => (
+                    <span key={interest} className="rounded-full bg-[#eef4ff] px-2 py-1 text-xs font-medium text-[#1b4e96]">
+                      {interest}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Best Fit</p>
+                <p>{selectedRep.focus}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Assigned Leads</p>
+                <p>{selectedRep.assignedLeads || 0}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
