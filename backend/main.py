@@ -147,14 +147,20 @@ async def convert(lead_id: str, request: ConvertRequest, background_tasks: Backg
 
 @app.post("/send-email")
 async def manual_send_email(request: ManualEmailRequest):
-    send_email(
-        to=request.to,
-        subject=request.subject,
-        html_body=request.htmlBody,
-        body=request.body,
-        from_name=request.fromName or "Mark Miller Subaru",
-    )
-    return {"success": True}
+    if not (request.to or "").strip():
+        raise HTTPException(status_code=400, detail="Missing recipient email.")
+
+    try:
+        send_email(
+            to=request.to,
+            subject=request.subject,
+            html_body=request.htmlBody,
+            body=request.body,
+            from_name=request.fromName or "Mark Miller Subaru",
+        )
+        return {"success": True, "message": f"Email sent to {request.to}"}
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Failed to send email: {str(exc)}")
 
 
 @app.get("/health")

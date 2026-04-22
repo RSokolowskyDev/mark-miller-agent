@@ -6,6 +6,38 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
   const [status, setStatus] = useState(lead.status || "new");
   const [vehicle, setVehicle] = useState(lead.recommended_model || "");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("success");
+  const [sendingTest, setSendingTest] = useState(false);
+
+  const normalizedSignals = (lead.signals || [])
+    .map((signal) => {
+      if (typeof signal === "string") return { text: signal, type: "neutral" };
+      return {
+        text: signal?.text || signal?.label || signal?.title || "",
+        type: ["positive", "negative", "neutral"].includes(signal?.type) ? signal.type : "neutral",
+      };
+    })
+    .filter((signal) => signal.text);
+
+  const personalDetails = (() => {
+    const raw = lead.personal_details;
+    if (!raw) return "";
+    if (typeof raw !== "string") return String(raw);
+    const trimmed = raw.trim();
+    if (!(trimmed.startsWith("{") || trimmed.startsWith("["))) return raw;
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed.map((item) => `- ${item}`).join("\n");
+      if (parsed && typeof parsed === "object") {
+        return Object.entries(parsed)
+          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
+          .join("\n");
+      }
+      return raw;
+    } catch {
+      return raw;
+    }
+  })();
 
   const saveStatus = async (nextStatus) => {
     setStatus(nextStatus);
@@ -24,27 +56,46 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
       body: JSON.stringify({ vehicle }),
     });
     if (response.ok) {
+      setMessageType("success");
       setMessage("Conversion confirmed. Email sequence triggered.");
       onUpdated();
     } else {
       const data = await response.json().catch(() => ({}));
+      setMessageType("error");
       setMessage(data.detail || "Could not trigger conversion sequence.");
     }
   };
 
   const sendTest = async () => {
-    await fetch(`${apiUrl}/send-email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        to: lead.email || "",
-        subject: lead.email_subject,
-        htmlBody: lead.email_html,
-        body: lead.email_body,
-        fromName: lead.assigned_specialist,
-      }),
-    });
-    setMessage("Test email sent.");
+    setSendingTest(true);
+    try {
+      const response = await fetch(`${apiUrl}/send-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: lead.email || "",
+          subject: lead.email_subject,
+          htmlBody: lead.email_html,
+          body: lead.email_body,
+          fromName: lead.assigned_specialist,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setMessageType("error");
+        setMessage(data.detail || "Send Test failed.");
+        return;
+      }
+
+      setMessageType("success");
+      setMessage(data.message || "Test email sent.");
+    } catch (error) {
+      setMessageType("error");
+      setMessage(error.message || "Send Test failed.");
+    } finally {
+      setSendingTest(false);
+    }
   };
 
   return (
@@ -69,18 +120,19 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
         <div className="grid gap-3 lg:grid-cols-3">
           <section className="rounded-md border border-slate-200 p-3 lg:col-span-1">
             <h3 className="mb-2 text-sm font-semibold">About This Customer</h3>
-            <p className="text-sm leading-5 text-slate-700">{lead.personal_details}</p>
+            <pre className="whitespace-pre-wrap text-sm leading-5 text-slate-700">{personalDetails}</pre>
             {lead.trade_in && <p className="mt-2 text-xs text-slate-500">Trade-in: {lead.trade_in}</p>}
           </section>
 
           <section className="rounded-md border border-slate-200 p-3 lg:col-span-2">
             <h3 className="mb-2 text-sm font-semibold">Lead Signals</h3>
           <div className="flex flex-wrap gap-2">
-            {(lead.signals || []).map((signal, i) => (
+            {normalizedSignals.map((signal, i) => (
               <span key={i} className={`rounded px-2 py-1 text-[11px] ${signal.type === "positive" ? "bg-green-100 text-green-700" : signal.type === "negative" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-700"}`}>
                 {signal.text}
               </span>
             ))}
+            {normalizedSignals.length === 0 && <span className="text-xs text-slate-500">No signals captured.</span>}
           </div>
           </section>
 
@@ -108,7 +160,9 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
           <pre className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap rounded bg-slate-50 p-2 text-xs">{lead.email_body}</pre>
           <div className="mt-2 flex gap-2">
             <button onClick={() => navigator.clipboard.writeText(lead.email_body || "")} className="rounded border px-2 py-1.5 text-xs">Copy</button>
-            <button onClick={sendTest} className="rounded border px-2 py-1.5 text-xs">Send Test</button>
+            <button disabled={sendingTest} onClick={sendTest} className="rounded border px-2 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-60">
+              {sendingTest ? "Sending..." : "Send Test"}
+            </button>
           </div>
         </section>
 
@@ -124,7 +178,15 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
           </div>
         </section>
 
-        {message && <p className="mt-3 rounded bg-green-50 p-2 text-xs text-green-700">{message}</p>}
+        {message && (
+          <p
+            className={`mt-3 rounded p-2 text-xs ${
+              messageType === "error" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
+            }`}
+          >
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -29,6 +29,13 @@ About them: {form_data.get('context')}
 Return ONLY valid JSON with keys:
 score, tier, urgency, signals, recommendedModel, assignedSpecialist,
 summary, routingReason, talkingPoints, potentialObjections, personalDetails.
+
+Formatting requirements:
+- score must be an integer 0-100
+- tier must be exactly one of: Hot, Warm, Cold
+- urgency should be concise (for example: Immediate, This Month, Exploring)
+- signals must be an array of objects: {{"text":"...", "type":"positive|neutral|negative"}}
+- personalDetails must be a plain string paragraph (not an object)
 """
     return Task(
         description=description,
