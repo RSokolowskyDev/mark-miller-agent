@@ -1,5 +1,6 @@
 import asyncio
 import os
+import traceback
 from typing import Optional
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -72,26 +73,37 @@ async def analyze(form_data: FormData, background_tasks: BackgroundTasks):
         assessment = result["assessment"]
         email = result["email"]
     except Exception as exc:
+        print("analyze.pipeline_error:", repr(exc))
+        print(traceback.format_exc())
         raise HTTPException(status_code=502, detail=f"Lead pipeline failed: {str(exc)}")
 
-    lead_payload = {
-        **form_data.dict(),
-        **assessment,
-        "email_subject": email.get("subject", ""),
-        "email_body": email.get("body", ""),
-        "email_html": email.get("html", ""),
-    }
-    lead_id = save_lead(lead_payload)
+    try:
+        lead_payload = {
+            **form_data.dict(),
+            **assessment,
+            "email_subject": email.get("subject", ""),
+            "email_body": email.get("body", ""),
+            "email_html": email.get("html", ""),
+        }
+        lead_id = save_lead(lead_payload)
+    except Exception as exc:
+        print("analyze.save_error:", repr(exc))
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to save lead: {str(exc)}")
 
     if form_data.email:
-        background_tasks.add_task(
-            _delayed_initial_email,
-            form_data.email,
-            email.get("subject", "Your personalized Subaru follow-up"),
-            email.get("html", ""),
-            email.get("body", ""),
-            email.get("fromName", assessment.get("assignedSpecialist", "Mark Miller Subaru")),
-        )
+        try:
+            background_tasks.add_task(
+                _delayed_initial_email,
+                form_data.email,
+                email.get("subject", "Your personalized Subaru follow-up"),
+                email.get("html", ""),
+                email.get("body", ""),
+                email.get("fromName", assessment.get("assignedSpecialist", "Mark Miller Subaru")),
+            )
+        except Exception as exc:
+            print("analyze.background_task_error:", repr(exc))
+            print(traceback.format_exc())
 
     return {"leadId": lead_id, "assessment": assessment, "email": email}
 
