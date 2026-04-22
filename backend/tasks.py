@@ -62,6 +62,7 @@ Rules:
 - Tone: honest, no pressure
 - Keep body under 130 words
 - Keep subject under 9 words
+- Do NOT include a signature line or sender name (system adds signature)
 - This is FIRST CONTACT:
   - Do NOT imply a previous call/visit/text/chat
   - Do NOT use phrases like "great chatting again", "as discussed", "yesterday"

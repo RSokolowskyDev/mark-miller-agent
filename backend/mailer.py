@@ -4,7 +4,7 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
-from email_templates import build_polished_email_html, resolve_local_email_images
+from email_templates import build_polished_email_html, normalize_email_body_text, resolve_local_email_images
 
 load_dotenv()
 
@@ -25,7 +25,12 @@ def send_email(to: str, subject: str, html_body: str, body: str, from_name: str 
     alt_part = MIMEMultipart("alternative")
     msg.attach(alt_part)
 
-    plain_text = body or ""
+    clean_body = normalize_email_body_text(body or html_body or "")
+    plain_text = (
+        f"{clean_body}\n\nBest,\n{display_from_name}\nProduct Specialist\nMark Miller Subaru South Towne"
+        if clean_body
+        else f"Best,\n{display_from_name}\nProduct Specialist\nMark Miller Subaru South Towne"
+    )
     hero_src = ""
     badge_src = ""
     local_images = resolve_local_email_images()

@@ -133,7 +133,6 @@ def _default_assessment(form_data: dict) -> dict:
 
 def _default_email(form_data: dict, assessment: dict) -> dict:
     name = form_data.get("name", "there")
-    specialist = assessment.get("assignedSpecialist", "Casey Morgan")
     model = assessment.get("recommendedModel", form_data.get("model", "Subaru"))
     budget = form_data.get("budget", "your budget")
     timeline = form_data.get("timeline", "your timeline")
@@ -144,14 +143,13 @@ def _default_email(form_data: dict, assessment: dict) -> dict:
         f"Thanks for sharing what you need in your next vehicle. Based on your goals, {model} is a strong fit.\n\n"
         f"I can send 2 options matched to {budget}, {payment}, and your {timeline} timeline.\n\n"
         f"Key detail I noted: {context or 'Family-first practicality with confident all-weather capability.'}\n\n"
-        "If you want, reply with your top priority and I will send the best two picks.\n\n"
-        f"- {specialist}\nProduct Specialist\nMark Miller Subaru South Towne"
+        "If you want, reply with your top priority and I will send the best two picks."
     )
     return {
         "subject": f"{name}, a quick follow-up on your Subaru options",
         "body": body,
         "html": body,
-        "fromName": specialist,
+        "fromName": "Ryan Sokolowsky",
     }
 
 
@@ -231,7 +229,7 @@ def _normalize_email(raw: dict, form_data: dict, assessment: dict) -> dict:
     merged["subject"] = str(merged.get("subject") or base["subject"])
     merged["body"] = str(merged.get("body") or base["body"])
     merged["html"] = str(merged.get("html") or base["html"])
-    merged["fromName"] = str(merged.get("fromName") or base["fromName"])
+    merged["fromName"] = "Ryan Sokolowsky"
     if _is_bad_first_touch_email(merged["body"]):
         return base
     return merged

@@ -29,6 +29,47 @@ def _as_safe_html(text_or_html: str) -> str:
     return "".join(rendered)
 
 
+def normalize_email_body_text(text: str) -> str:
+    normalized = _normalize_linebreaks(text).strip()
+    if not normalized:
+        return ""
+
+    lines = normalized.split("\n")
+    trimmed = list(lines)
+
+    # Remove trailing signature-ish lines added by model output.
+    while trimmed and not trimmed[-1].strip():
+        trimmed.pop()
+
+    signature_markers = (
+        "product specialist",
+        "mark miller subaru",
+        "alex rivera",
+        "jordan mack",
+        "taylor brooks",
+        "casey morgan",
+        "sam wilder",
+        "drew callahan",
+        "morgan ellis",
+        "ryan sokolowsky",
+    )
+
+    while trimmed:
+        tail = trimmed[-1].strip().lower()
+        if not tail:
+            trimmed.pop()
+            continue
+        if tail.startswith("-"):
+            trimmed.pop()
+            continue
+        if any(marker in tail for marker in signature_markers):
+            trimmed.pop()
+            continue
+        break
+
+    return "\n".join(trimmed).strip()
+
+
 def resolve_local_email_images() -> dict:
     project_root = Path(__file__).resolve().parents[1]
     images_dir = project_root / "images"
@@ -50,7 +91,8 @@ def build_polished_email_html(
 ) -> str:
     subject_safe = html.escape(str(subject or "Mark Miller Subaru Follow-Up"))
     from_name_safe = html.escape(str(from_name or "Mark Miller Subaru"))
-    content_html = _as_safe_html(body_content)
+    clean_body = normalize_email_body_text(body_content)
+    content_html = _as_safe_html(clean_body)
 
     cta_url = os.getenv(
         "EMAIL_CTA_URL",
@@ -117,6 +159,11 @@ def build_polished_email_html(
               <td style="padding:28px 28px 20px;">
                 <h1 style="margin:0 0 14px; font-size:24px; line-height:1.25; color:#0f172a;">{subject_safe}</h1>
                 {content_html}
+                <p style="margin:14px 0 0; font-size:16px; line-height:1.6; color:#0f172a;">
+                  Best,<br/>
+                  <strong>{from_name_safe}</strong><br/>
+                  Product Specialist
+                </p>
                 <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:10px;">
                   <tr>
                     <td align="center" style="border-radius:8px; background:#2563eb;">
