@@ -1,6 +1,4 @@
-crewai>=0.80.0
-crewai-tools
-litellm
+crewai[litellm]==1.14.2
 fastapi
 uvicorn
 python-dotenv
