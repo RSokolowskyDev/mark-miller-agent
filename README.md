@@ -64,6 +64,7 @@ npm run dev
 
 ## Notes
 - Set `LLM_PROVIDER=gemini` and `GEMINI_API_KEY` in backend `.env` (or cloud env vars).
+- Recommended model: `LLM_MODEL=gemini/gemini-2.5-flash-lite`.
 - You can switch to Groq anytime by setting `LLM_PROVIDER=groq` and `GROQ_API_KEY`.
 - Gmail App Password is required (do not use your normal Gmail password).
 - `.env` files are gitignored and should never be committed.

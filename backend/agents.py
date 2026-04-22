@@ -23,7 +23,7 @@ def _resolve_llm() -> tuple[LLM, str, str]:
     if provider == "gemini":
         if not gemini_key:
             raise RuntimeError("LLM_PROVIDER=gemini but GEMINI_API_KEY is missing in backend/.env.")
-        model = os.getenv("LLM_MODEL", "gemini/gemini-1.5-flash")
+        model = os.getenv("LLM_MODEL", "gemini/gemini-2.5-flash-lite")
         return LLM(model=model, api_key=gemini_key), provider, model
 
     if provider == "groq":

@@ -158,7 +158,7 @@ async def health():
 
     default_model = "unconfigured"
     if provider == "gemini":
-        default_model = "gemini/gemini-1.5-flash"
+        default_model = "gemini/gemini-2.5-flash-lite"
     elif provider == "groq":
         default_model = "groq/llama-3.1-8b-instant"
 
