@@ -1,5 +1,6 @@
 import html
 import os
+from pathlib import Path
 
 
 def _normalize_linebreaks(text: str) -> str:
@@ -28,7 +29,25 @@ def _as_safe_html(text_or_html: str) -> str:
     return "".join(rendered)
 
 
-def build_polished_email_html(subject: str, body_content: str, from_name: str = "Mark Miller Subaru") -> str:
+def resolve_local_email_images() -> dict:
+    project_root = Path(__file__).resolve().parents[1]
+    images_dir = project_root / "images"
+    hero_path = Path(
+        os.getenv("EMAIL_HERO_IMAGE_PATH", str(images_dir / "Untitled.png")).strip()
+    )
+    badge_path = Path(
+        os.getenv("EMAIL_BADGE_IMAGE_PATH", str(images_dir / "1.png")).strip()
+    )
+    return {"hero": hero_path, "badge": badge_path}
+
+
+def build_polished_email_html(
+    subject: str,
+    body_content: str,
+    from_name: str = "Mark Miller Subaru",
+    hero_src: str = "",
+    badge_src: str = "",
+) -> str:
     subject_safe = html.escape(str(subject or "Mark Miller Subaru Follow-Up"))
     from_name_safe = html.escape(str(from_name or "Mark Miller Subaru"))
     content_html = _as_safe_html(body_content)
@@ -43,8 +62,14 @@ def build_polished_email_html(subject: str, body_content: str, from_name: str = 
         "EMAIL_ASSET_BASE_URL",
         "https://rsokolowskydev.github.io/mark-miller-agent/images",
     ).strip().rstrip("/")
-    hero_image = os.getenv("EMAIL_HERO_IMAGE_URL", f"{asset_base}/Untitled.png").strip()
-    badge_image = os.getenv("EMAIL_BADGE_IMAGE_URL", f"{asset_base}/1.png").strip()
+    hero_image = (
+        hero_src.strip()
+        or os.getenv("EMAIL_HERO_IMAGE_URL", f"{asset_base}/Untitled.png").strip()
+    )
+    badge_image = (
+        badge_src.strip()
+        or os.getenv("EMAIL_BADGE_IMAGE_URL", f"{asset_base}/1.png").strip()
+    )
     hero_image_safe = html.escape(hero_image)
     badge_image_safe = html.escape(badge_image)
 
@@ -120,4 +145,3 @@ def build_polished_email_html(subject: str, body_content: str, from_name: str = 
   </body>
 </html>
 """
-

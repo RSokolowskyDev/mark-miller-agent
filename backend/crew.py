@@ -141,11 +141,10 @@ def _default_email(form_data: dict, assessment: dict) -> dict:
     context = str(form_data.get("context") or "").strip()
     body = (
         f"Hi {name},\n\n"
-        "Thanks again for sharing what matters most in your next vehicle.\n\n"
-        f"Based on your goals, I put together a starting recommendation around the {model}. "
-        f"I can also send a side-by-side option set matched to {budget}, {payment}, and a {timeline} decision window.\n\n"
-        f"What stood out from your note:\n{context or '- Family-first practicality and confident year-round capability.'}\n\n"
-        "If you want, reply with your ideal day/time and I will have everything lined up before you arrive.\n\n"
+        f"Thanks for sharing what you need in your next vehicle. Based on your goals, {model} is a strong fit.\n\n"
+        f"I can send 2 options matched to {budget}, {payment}, and your {timeline} timeline.\n\n"
+        f"Key detail I noted: {context or 'Family-first practicality with confident all-weather capability.'}\n\n"
+        "If you want, reply with your top priority and I will send the best two picks.\n\n"
         f"- {specialist}\nProduct Specialist\nMark Miller Subaru South Towne"
     )
     return {
@@ -154,6 +153,22 @@ def _default_email(form_data: dict, assessment: dict) -> dict:
         "html": body,
         "fromName": specialist,
     }
+
+
+def _is_bad_first_touch_email(body: str) -> bool:
+    text = str(body or "").lower()
+    prior_contact_phrases = [
+        "great chatting",
+        "great connecting",
+        "as discussed",
+        "yesterday",
+        "again",
+        "welcome back",
+    ]
+    if any(phrase in text for phrase in prior_contact_phrases):
+        return True
+    word_count = len(re.findall(r"\b\w+\b", text))
+    return word_count > 150
 
 
 def _normalize_assessment(raw: dict, form_data: dict) -> dict:
@@ -217,6 +232,8 @@ def _normalize_email(raw: dict, form_data: dict, assessment: dict) -> dict:
     merged["body"] = str(merged.get("body") or base["body"])
     merged["html"] = str(merged.get("html") or base["html"])
     merged["fromName"] = str(merged.get("fromName") or base["fromName"])
+    if _is_bad_first_touch_email(merged["body"]):
+        return base
     return merged
 
 

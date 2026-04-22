@@ -46,7 +46,7 @@ Formatting requirements:
 
 def create_initial_email_task(form_data: dict, assessment: dict) -> Task:
     description = f"""
-Write a human first follow-up email for this customer.
+Write a SHORT first-touch follow-up email for this customer.
 
 Customer:
 - Name: {form_data.get('name')}
@@ -58,9 +58,14 @@ Customer:
 
 Rules:
 - Warm and personalized
-- No generic opening lines
-- Mention specifics from their context
+- Mention 1-2 specific details from their context
 - Tone: honest, no pressure
+- Keep body under 130 words
+- Keep subject under 9 words
+- This is FIRST CONTACT:
+  - Do NOT imply a previous call/visit/text/chat
+  - Do NOT use phrases like "great chatting again", "as discussed", "yesterday"
+- Ask one simple next step at the end
 
 Return ONLY valid JSON:
 {{

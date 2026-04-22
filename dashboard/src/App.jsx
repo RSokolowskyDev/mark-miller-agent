@@ -28,9 +28,8 @@ export default function App() {
   }, []);
 
   const columns = {
-    new: "New Leads",
+    new: "New",
     contacted: "Contacted",
-    appointment: "Appointment Set",
     converted: "Converted",
   };
 
@@ -94,7 +93,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-lg border border-[#d9e2f0] bg-white p-3">
             <p className="text-[11px] uppercase tracking-wide text-slate-500">Total Leads</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{leads.length}</p>
@@ -112,17 +111,13 @@ export default function App() {
             <p className="mt-1 text-2xl font-bold text-[#f97316]">{warmCount}</p>
           </div>
           <div className="rounded-lg border border-[#d9e2f0] bg-white p-3">
-            <p className="text-[11px] uppercase tracking-wide text-slate-500">Contacted</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{byStatus("contacted").length}</p>
-          </div>
-          <div className="rounded-lg border border-[#d9e2f0] bg-white p-3">
             <p className="text-[11px] uppercase tracking-wide text-slate-500">Converted</p>
             <p className="mt-1 text-2xl font-bold text-[#22c55e]">{byStatus("converted").length}</p>
           </div>
         </div>
 
         {view === "Pipeline" && (
-          <div className="grid gap-3 xl:grid-cols-4">
+          <div className="grid gap-3 xl:grid-cols-3">
             {Object.entries(columns).map(([status, title]) => (
               <section key={status} className="flex max-h-[calc(100vh-245px)] flex-col rounded-lg border border-[#d9e2f0] bg-white p-2.5">
                 <div className="mb-2 flex items-center justify-between">
