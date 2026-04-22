@@ -16,15 +16,15 @@ const demoProfiles = [
     intent: "Looking to buy new",
     model: "Outback",
     budget: "$35-45k",
-    tradeIn: "2019 Honda Pilot, 61000 miles, Good",
+    tradeIn: "2019 Honda Pilot, around 61k miles, decent shape",
     paymentMethod: "Finance",
     timeline: "This month",
     firstTimeBuyer: "No, I have bought before",
     ownedNewVehicle: "Yes",
     purchaseStyle: "I like to compare details",
     context:
-      "I have three kids and two dogs. We ski up Little Cottonwood Canyon most winter weekends and camp near Moab in summer. Need AWD, reliable safety tech, and strong cargo space for family gear.",
-    extraNotes: "Would love driver-assist features and easy car-seat setup.",
+      "We have 3 kids and 2 dogs, so space is a big deal for us. We do ski trips most weekends in winter and camping in summer, so AWD and cargo room matter a lot.",
+    extraNotes: "Safety tech and easy car-seat setup would be huge.",
     email: "",
   },
   {
@@ -40,8 +40,8 @@ const demoProfiles = [
     ownedNewVehicle: "No",
     purchaseStyle: "I want guidance",
     context:
-      "First time buying my own car. I mostly commute downtown and visit family on weekends. I want something safe, easy to park, and simple to understand.",
-    extraNotes: "Please explain trim differences in plain language.",
+      "This is my first time buying on my own. I mostly drive in the city and want something safe, not too big, and easy to park.",
+    extraNotes: "I get overwhelmed with options, so simple explanations help.",
     email: "",
   },
   {
@@ -50,15 +50,15 @@ const demoProfiles = [
     intent: "Looking for used",
     model: "Forester",
     budget: "Under $25k",
-    tradeIn: "2013 Ford Escape, 132000 miles, Fair",
+    tradeIn: "2013 Ford Escape, 132k miles, some wear",
     paymentMethod: "Cash",
     timeline: "This week",
     firstTimeBuyer: "No, I have bought before",
     ownedNewVehicle: "Not sure",
     purchaseStyle: "I want the fastest process",
     context:
-      "I need the best value possible and a fast transaction. Main use is school drop-offs and work commute with occasional mountain weather driving.",
-    extraNotes: "I want to understand total out-the-door numbers clearly.",
+      "Honestly just trying to get the best value without spending all day at the dealership. Mostly commute and kid drop-off, but I still need something solid in winter.",
+    extraNotes: "Please show out-the-door numbers up front.",
     email: "",
   },
   {
@@ -74,8 +74,8 @@ const demoProfiles = [
     ownedNewVehicle: "Yes",
     purchaseStyle: "I like to compare details",
     context:
-      "I care about handling, power delivery, and daily drivability. I want to compare trims and feature packages side by side before deciding.",
-    extraNotes: "Interested in warranty and maintenance expectations.",
+      "I want something fun to drive but still practical as a daily. I'd like to compare trims side by side before I commit.",
+    extraNotes: "Would also like a quick breakdown of warranty and maintenance costs.",
     email: "",
   },
   {
@@ -91,8 +91,8 @@ const demoProfiles = [
     ownedNewVehicle: "Yes",
     purchaseStyle: "I want guidance",
     context:
-      "I am considering my first EV and want help understanding charging, winter range, and whether it fits my weekly commute plus ski trips.",
-    extraNotes: "Would like transparent pros/cons versus gas models.",
+      "I am curious about going EV but I still have range anxiety, especially in winter. I want to understand charging and whether it actually fits my weekly routine.",
+    extraNotes: "A straightforward EV vs gas comparison would help.",
     email: "",
   },
 ];
