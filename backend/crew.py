@@ -86,6 +86,23 @@ def _normalize_assessment(raw: dict, form_data: dict) -> dict:
         else base["potentialObjections"]
     )
     merged["score"] = int(merged.get("score", base["score"])) if str(merged.get("score", "")).isdigit() else base["score"]
+
+    # Guard DB-bound text fields against non-string model outputs.
+    text_fields = [
+        "tier",
+        "urgency",
+        "recommendedModel",
+        "assignedSpecialist",
+        "summary",
+        "routingReason",
+        "personalDetails",
+    ]
+    for field in text_fields:
+        value = merged.get(field, base.get(field, ""))
+        if isinstance(value, (dict, list)):
+            value = json.dumps(value)
+        merged[field] = str(value) if value is not None else str(base.get(field, ""))
+
     return merged
 
 

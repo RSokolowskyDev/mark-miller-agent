@@ -152,7 +152,10 @@ export default function LeadForm({ onSuccess }) {
         body: JSON.stringify(form),
       });
 
-      if (!response.ok) throw new Error("We could not submit your request right now.");
+      if (!response.ok) {
+        const errPayload = await response.json().catch(() => ({}));
+        throw new Error(errPayload.detail || "We could not submit your request right now.");
+      }
       const data = await response.json();
       onSuccess({ ...data, customerName: form.name });
     } catch (err) {
