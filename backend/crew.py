@@ -135,17 +135,23 @@ def _default_email(form_data: dict, assessment: dict) -> dict:
     name = form_data.get("name", "there")
     specialist = assessment.get("assignedSpecialist", "Casey Morgan")
     model = assessment.get("recommendedModel", form_data.get("model", "Subaru"))
+    budget = form_data.get("budget", "your budget")
+    timeline = form_data.get("timeline", "your timeline")
+    payment = form_data.get("paymentMethod", "your preferred payment style")
+    context = str(form_data.get("context") or "").strip()
     body = (
         f"Hi {name},\n\n"
-        f"Thanks for sharing those details. I read through your note and wanted to personally reach out.\n\n"
-        f"Based on what you shared, {model} could be a strong fit. If you want, I can send a quick side-by-side "
-        "comparison and a no-pressure next-step plan.\n\n"
-        f"- {specialist}\nMark Miller Subaru South Towne"
+        "Thanks again for sharing what matters most in your next vehicle.\n\n"
+        f"Based on your goals, I put together a starting recommendation around the {model}. "
+        f"I can also send a side-by-side option set matched to {budget}, {payment}, and a {timeline} decision window.\n\n"
+        f"What stood out from your note:\n{context or '- Family-first practicality and confident year-round capability.'}\n\n"
+        "If you want, reply with your ideal day/time and I will have everything lined up before you arrive.\n\n"
+        f"- {specialist}\nProduct Specialist\nMark Miller Subaru South Towne"
     )
     return {
         "subject": f"{name}, a quick follow-up on your Subaru options",
         "body": body,
-        "html": "<p>" + body.replace("\n", "<br/>") + "</p>",
+        "html": body,
         "fromName": specialist,
     }
 
