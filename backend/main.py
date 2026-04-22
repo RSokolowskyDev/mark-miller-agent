@@ -136,8 +136,23 @@ async def manual_send_email(request: ManualEmailRequest):
 
 @app.get("/health")
 async def health():
+    provider = os.getenv("LLM_PROVIDER", "").strip().lower()
+    if not provider:
+        if (os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip()):
+            provider = "gemini"
+        elif os.getenv("GROQ_API_KEY", "").strip():
+            provider = "groq"
+        else:
+            provider = "unconfigured"
+
+    default_model = "unconfigured"
+    if provider == "gemini":
+        default_model = "gemini/gemini-1.5-flash"
+    elif provider == "groq":
+        default_model = "groq/llama-3.1-8b-instant"
+
     return {
         "status": "ok",
-        "provider": "groq",
-        "model": os.getenv("LLM_MODEL", "groq/llama-3.1-8b-instant"),
+        "provider": provider,
+        "model": os.getenv("LLM_MODEL", default_model),
     }

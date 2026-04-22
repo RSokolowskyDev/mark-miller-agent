@@ -2,7 +2,7 @@
 
 AI-powered lead scoring and follow-up email system built to demonstrate how AI agents can integrate with dealership operations.
 
-Built with CrewAI (two-agent pipeline), FastAPI, React, Groq, and Gmail.
+Built with CrewAI (two-agent pipeline), FastAPI, React, Gemini/Groq, and Gmail.
 
 ## Live URLs
 - Customer Form: https://rsokolowskydev.github.io/mark-miller-agent/customer-form/
@@ -25,7 +25,7 @@ Built with CrewAI (two-agent pipeline), FastAPI, React, Groq, and Gmail.
 ### Prerequisites
 - Python 3.10-3.12
 - Node.js 18+
-- Groq API key
+- Gemini API key (recommended) or Groq API key
 - Gmail account with App Password configured
 
 ### Setup
@@ -34,7 +34,7 @@ Terminal 1 - Backend:
 cd backend
 pip install -r requirements.txt
 cp .env.example .env
-# Fill in GROQ_API_KEY and GMAIL_APP_PASSWORD in .env
+# Fill in GEMINI_API_KEY (or GROQ_API_KEY) and GMAIL_APP_PASSWORD in .env
 uvicorn main:app --reload --port 8000
 ```
 
@@ -63,6 +63,7 @@ npm run dev
 6. Deploy dashboard: `cd dashboard && npm run deploy`.
 
 ## Notes
-- Set `GROQ_API_KEY` in backend `.env` (or in your cloud host env vars).
+- Set `LLM_PROVIDER=gemini` and `GEMINI_API_KEY` in backend `.env` (or cloud env vars).
+- You can switch to Groq anytime by setting `LLM_PROVIDER=groq` and `GROQ_API_KEY`.
 - Gmail App Password is required (do not use your normal Gmail password).
 - `.env` files are gitignored and should never be committed.
