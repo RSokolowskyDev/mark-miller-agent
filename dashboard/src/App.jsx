@@ -46,7 +46,7 @@ export default function App() {
   const [view, setView] = useState("Pipeline");
   const [leads, setLeads] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
-  const [expandedReps, setExpandedReps] = useState({});
+  const [selectedRepName, setSelectedRepName] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const apiUrl = useMemo(() => import.meta.env.VITE_API_URL || "http://localhost:8000", []);
@@ -119,9 +119,24 @@ export default function App() {
       .sort((a, b) => b.assignedLeads - a.assignedLeads || a.name.localeCompare(b.name));
   }, [leads]);
 
-  const toggleRep = (name) => {
-    setExpandedReps((prev) => ({ ...prev, [name]: !prev[name] }));
-  };
+  useEffect(() => {
+    if (!repProfiles.length) {
+      setSelectedRepName("");
+      return;
+    }
+
+    const selectedStillExists = repProfiles.some((rep) => rep.name === selectedRepName);
+    if (!selectedStillExists) {
+      setSelectedRepName(repProfiles[0].name);
+    }
+  }, [repProfiles, selectedRepName]);
+
+  const selectedRep =
+    repProfiles.find((rep) => rep.name === selectedRepName) ||
+    repProfiles[0] ||
+    null;
+
+  const selectedRepLeads = selectedRep?.leads || [];
 
   return (
     <div className="flex min-h-screen bg-[#f3f6fb]">
@@ -147,49 +162,25 @@ export default function App() {
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-300">Sales Rep Profiles</p>
           <div className="max-h-[280px] space-y-1.5 overflow-y-auto pr-1">
             {repProfiles.map((rep) => {
-              const isOpen = Boolean(expandedReps[rep.name]);
               return (
-                <div key={rep.name} className="rounded-md border border-[#2f3f63] bg-[#1f2e4f]">
-                  <button
-                    onClick={() => toggleRep(rep.name)}
-                    className="w-full px-2.5 py-2 text-left hover:bg-[#243250]"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-white">{rep.name}</p>
-                        <p className="text-[11px] text-slate-300">{rep.title}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[11px] font-semibold text-slate-200">{rep.assignedLeads}</p>
-                        <p className="text-[10px] text-slate-400">{isOpen ? "Hide" : "Show"}</p>
-                      </div>
+                <button
+                  key={rep.name}
+                  type="button"
+                  onClick={() => setSelectedRepName(rep.name)}
+                  className={`w-full rounded-md border px-2.5 py-2 text-left transition ${
+                    selectedRep?.name === rep.name
+                      ? "border-[#5d79b8] bg-[#23365e]"
+                      : "border-[#2f3f63] bg-[#1f2e4f] hover:bg-[#243250]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{rep.name}</p>
+                      <p className="text-[11px] text-slate-300">{rep.title}</p>
                     </div>
-                  </button>
-                  {isOpen && (
-                    <div className="border-t border-[#31456f] bg-[#192846] p-2">
-                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-300">Experience</p>
-                      <p className="mb-2 text-[11px] text-slate-200">{rep.experience}</p>
-                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-300">Assigned Leads</p>
-                      <div className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
-                        {(rep.leads || []).length === 0 && (
-                          <p className="text-[11px] text-slate-400">No leads assigned yet.</p>
-                        )}
-                        {(rep.leads || []).map((lead) => (
-                          <button
-                            key={lead.id}
-                            onClick={() => setSelectedLead(lead)}
-                            className="w-full rounded border border-[#3b4f79] bg-[#22345a] px-2 py-1.5 text-left hover:border-[#6d89c7]"
-                          >
-                            <p className="text-xs font-semibold text-white">{lead.name}</p>
-                            <p className="line-clamp-2 text-[10px] text-slate-200">
-                              {lead.routing_reason || lead.summary || "Matched based on profile fit and goals."}
-                            </p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    <p className="text-xs font-semibold text-slate-200">{rep.assignedLeads}</p>
+                  </div>
+                </button>
               );
             })}
           </div>
@@ -245,21 +236,90 @@ export default function App() {
 
         {view === "Pipeline" && (
           <div className="grid gap-3 xl:grid-cols-3">
-            {Object.entries(columns).map(([status, title]) => (
-              <section key={status} className="flex max-h-[calc(100vh-245px)] flex-col rounded-lg border border-[#d9e2f0] bg-white p-2.5">
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                    {byStatus(status).length}
-                  </span>
-                </div>
-                <div className="space-y-2 overflow-y-auto pr-1">
-                  {byStatus(status).map((lead) => (
-                    <LeadCard key={lead.id} lead={lead} onOpen={() => setSelectedLead(lead)} />
-                  ))}
-                </div>
-              </section>
-            ))}
+            <section className="flex max-h-[calc(100vh-245px)] flex-col rounded-lg border border-[#d9e2f0] bg-white p-2.5">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-800">New</h3>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                  {byStatus("new").length}
+                </span>
+              </div>
+              <div className="space-y-2 overflow-y-auto pr-1">
+                {byStatus("new").map((lead) => (
+                  <LeadCard key={lead.id} lead={lead} onOpen={() => setSelectedLead(lead)} />
+                ))}
+              </div>
+            </section>
+
+            <section className="flex max-h-[calc(100vh-245px)] flex-col rounded-lg border border-[#d9e2f0] bg-white p-3 xl:col-span-2">
+              <div className="mb-3 rounded-md border border-[#d9e2f0] bg-[#f8fbff] p-3">
+                {selectedRep ? (
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-base font-bold text-slate-900">{selectedRep.name}</p>
+                        <p className="text-sm text-slate-600">{selectedRep.title}</p>
+                      </div>
+                      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
+                        {selectedRepLeads.length} assigned
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-700">{selectedRep.experience}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(selectedRep.interests || []).slice(0, 4).map((interest) => (
+                        <span key={interest} className="rounded-full bg-white px-2 py-1 text-xs text-slate-700">
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-500">{selectedRep.focus}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">No sales reps available.</p>
+                )}
+              </div>
+
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-800">Leads Assigned To {selectedRep?.name || "Rep"}</h3>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                  {selectedRepLeads.length}
+                </span>
+              </div>
+              <div className="space-y-2 overflow-y-auto pr-1">
+                {selectedRepLeads.length === 0 && (
+                  <div className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                    No assigned leads yet for this rep.
+                  </div>
+                )}
+                {selectedRepLeads.map((lead) => (
+                  <button
+                    key={lead.id}
+                    type="button"
+                    onClick={() => setSelectedLead(lead)}
+                    className="w-full rounded-md border border-[#d9e2f0] bg-white p-3 text-left hover:bg-[#f8fbff]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-base font-semibold text-slate-900">{lead.name}</p>
+                        <p className="mt-1 text-xs text-slate-600">
+                          {lead.routing_reason || lead.summary || "Matched to this specialist based on fit."}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs font-bold ${
+                          Number(lead.score) >= 80
+                            ? "bg-red-100 text-red-700"
+                            : Number(lead.score) >= 60
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {lead.score}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
           </div>
         )}
 
