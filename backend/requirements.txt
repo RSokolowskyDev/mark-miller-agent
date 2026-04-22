@@ -1,4 +1,4 @@
-crewai[litellm]==1.14.2
+crewai[litellm,google-genai]==1.14.2
 fastapi
 uvicorn
 python-dotenv
