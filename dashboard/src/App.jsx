@@ -65,12 +65,6 @@ export default function App() {
     return () => clearInterval(id);
   }, []);
 
-  const columns = {
-    new: "New",
-    contacted: "Contacted",
-    converted: "Converted",
-  };
-
   const byStatus = (status) => leads.filter((lead) => (lead.status || "new") === status);
   const hotCount = leads.filter((lead) => (lead.tier || "").toLowerCase() === "hot").length;
   const warmCount = leads.filter((lead) => (lead.tier || "").toLowerCase() === "warm").length;
