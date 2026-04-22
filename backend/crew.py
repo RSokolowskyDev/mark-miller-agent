@@ -1,4 +1,5 @@
 import json
+import hashlib
 import re
 from crewai import Crew, Process
 from tasks import create_scoring_task, create_initial_email_task
@@ -29,6 +30,10 @@ def _default_assessment(form_data: dict) -> dict:
     intent = str(form_data.get("intent") or "").lower()
     payment = str(form_data.get("paymentMethod") or "").lower()
     timeline = str(form_data.get("timeline") or "").lower()
+    first_time_buyer = str(form_data.get("firstTimeBuyer") or "").lower()
+    owned_new_vehicle = str(form_data.get("ownedNewVehicle") or "").lower()
+    purchase_style = str(form_data.get("purchaseStyle") or "").lower()
+    extra_notes = str(form_data.get("extraNotes") or "").strip()
 
     score = 35
     signals = []
@@ -56,6 +61,13 @@ def _default_assessment(form_data: dict) -> dict:
         score += 8
         signals.append({"text": f"Payment preference captured ({payment.title()})", "type": "positive"})
 
+    if "first" in first_time_buyer:
+        signals.append({"text": "First-time purchase journey", "type": "neutral"})
+    if "no" in owned_new_vehicle:
+        signals.append({"text": "Has not owned a new vehicle before", "type": "neutral"})
+    if purchase_style:
+        signals.append({"text": f"Shopping style: {purchase_style.title()}", "type": "positive"})
+
     if model and str(model).lower() != "not sure yet":
         score += 9
         signals.append({"text": f"Specific model interest ({model})", "type": "positive"})
@@ -79,28 +91,9 @@ def _default_assessment(form_data: dict) -> dict:
         tier = "Cold"
 
     context_l = context.lower()
-    model_l = str(model).lower()
-    if model_l in {"wrx", "brz"}:
-        specialist = "Sam Wilder"
-        routing_reason = "Performance model interest is best handled by Sam."
-    elif trade_in or "trade" in intent or "used" in intent:
-        specialist = "Drew Callahan"
-        routing_reason = "Trade-in and value-focused scenarios are Drew's specialty."
-    elif "family" in context_l or "kid" in context_l or "children" in context_l:
-        specialist = "Alex Rivera"
-        routing_reason = "Family-focused shoppers are a strong fit for Alex."
-    elif any(word in context_l for word in ["ski", "camp", "outdoor", "canyon", "moab"]):
-        specialist = "Jordan Mack"
-        routing_reason = "Outdoor lifestyle fit and utility usage align with Jordan's strengths."
-    elif model_l in {"solterra"} or "ev" in intent or "electric" in context_l:
-        specialist = "Taylor Brooks"
-        routing_reason = "EV and technology-focused guidance aligns with Taylor."
-    elif "$25" in str(form_data.get("budget", "")) or "under 25" in str(form_data.get("budget", "")).lower():
-        specialist = "Morgan Ellis"
-        routing_reason = "Budget-conscious planning aligns well with Morgan."
-    else:
-        specialist = "Casey Morgan"
-        routing_reason = "Early-stage research and comparison support aligns with Casey."
+    profile = _generate_dynamic_specialist_profile(form_data, model, tier)
+    specialist = profile["name"]
+    routing_reason = profile["whyMatch"]
 
     return {
         "score": score,
@@ -109,8 +102,12 @@ def _default_assessment(form_data: dict) -> dict:
         "signals": signals,
         "recommendedModel": model,
         "assignedSpecialist": specialist,
-        "summary": f"{name} is evaluating a {model} with a {timeline or 'flexible'} timeline and {tier.lower()} intent profile.",
+        "summary": (
+            f"{name} is evaluating a {model} with a {timeline or 'flexible'} timeline and {tier.lower()} intent profile. "
+            f"Buying style: {purchase_style or 'not specified'}."
+        ),
         "routingReason": routing_reason,
+        "specialistProfile": profile,
         "talkingPoints": [
             "Reflect their exact lifestyle use-case before discussing trim and pricing.",
             "Confirm household/passenger and cargo needs with concrete examples.",
@@ -127,7 +124,78 @@ def _default_assessment(form_data: dict) -> dict:
                 "response": "Walk through total monthly options and value trade-offs transparently.",
             },
         ],
-        "personalDetails": context or "Customer is exploring options and shared limited context.",
+        "personalDetails": (
+            (
+                context
+                or "Customer is exploring options and shared limited context."
+            )
+            + (f" Additional notes: {extra_notes}" if extra_notes else "")
+        ),
+    }
+
+
+def _generate_dynamic_specialist_profile(form_data: dict, model: str, tier: str) -> dict:
+    name_seed = f"{form_data.get('name','')}-{form_data.get('context','')}-{form_data.get('intent','')}-{form_data.get('timeline','')}"
+    digest = hashlib.sha256(name_seed.encode("utf-8")).hexdigest()
+    idx = int(digest[:8], 16)
+
+    first_names = ["Alex", "Jordan", "Taylor", "Casey", "Sam", "Drew", "Morgan", "Riley", "Avery", "Quinn"]
+    last_names = ["Rivera", "Mack", "Brooks", "Morgan", "Wilder", "Callahan", "Ellis", "Parker", "Hayes", "Lane"]
+    styles = ["Calm and consultative", "Efficient and direct", "Educational and patient", "High-energy and proactive"]
+    titles = ["Senior Product Guide", "Customer Fit Specialist", "Vehicle Match Advisor", "Ownership Experience Specialist"]
+    strengths_pool = [
+        "Family fit interviews",
+        "Trim-level recommendation",
+        "Trade-in strategy",
+        "Budget-to-value planning",
+        "Tech and feature onboarding",
+        "Outdoor lifestyle matching",
+        "First-time buyer coaching",
+        "Long-term ownership planning",
+    ]
+
+    name = f"{first_names[idx % len(first_names)]} {last_names[(idx // 7) % len(last_names)]}"
+    style = styles[(idx // 13) % len(styles)]
+    title = titles[(idx // 17) % len(titles)]
+    tier_fit = f"{tier} lead conversion focus"
+
+    intent = str(form_data.get("intent") or "").lower()
+    context = str(form_data.get("context") or "").lower()
+    strengths = []
+    if "family" in context or "kid" in context:
+        strengths.append("Family fit interviews")
+    if "trade" in intent or str(form_data.get("tradeIn") or "").strip():
+        strengths.append("Trade-in strategy")
+    if any(k in context for k in ["ski", "camp", "outdoor", "snow", "moab"]):
+        strengths.append("Outdoor lifestyle matching")
+    if "first" in str(form_data.get("firstTimeBuyer") or "").lower():
+        strengths.append("First-time buyer coaching")
+    if model and str(model).lower() in {"solterra"}:
+        strengths.append("Tech and feature onboarding")
+    strengths.append(tier_fit)
+
+    while len(strengths) < 4:
+        candidate = strengths_pool[(idx + len(strengths) * 11) % len(strengths_pool)]
+        if candidate not in strengths:
+            strengths.append(candidate)
+
+    strengths = strengths[:4]
+    ideal_customers = [
+        "Buyers with clear lifestyle requirements",
+        "Customers who want transparent next steps",
+        "Shoppers balancing budget and long-term value",
+    ]
+    why_match = (
+        f"{name} matches this lead because their style is {style.lower()} and their strengths "
+        f"align with the customer's goals ({', '.join(strengths[:2]).lower()})."
+    )
+    return {
+        "name": name,
+        "title": title,
+        "style": style,
+        "strengths": strengths,
+        "idealCustomers": ideal_customers,
+        "whyMatch": why_match,
     }
 
 
@@ -138,11 +206,23 @@ def _default_email(form_data: dict, assessment: dict) -> dict:
     timeline = form_data.get("timeline", "your timeline")
     payment = form_data.get("paymentMethod", "your preferred payment style")
     context = str(form_data.get("context") or "").strip()
+    purchase_style = str(form_data.get("purchaseStyle") or "").strip()
+    first_time_buyer = str(form_data.get("firstTimeBuyer") or "").strip()
+    context_brief = context.split(".")[0].strip()
+    if len(context_brief) > 110:
+        context_brief = context_brief[:107] + "..."
+    first_time_line = (
+        "I will keep the recommendations very clear since this may be your first buying cycle.\n\n"
+        if "first" in first_time_buyer.lower()
+        else ""
+    )
     body = (
         f"Hi {name},\n\n"
         f"Thanks for sharing what you need in your next vehicle. Based on your goals, {model} is a strong fit.\n\n"
-        f"I can send 2 options matched to {budget}, {payment}, and your {timeline} timeline.\n\n"
-        f"Key detail I noted: {context or 'Family-first practicality with confident all-weather capability.'}\n\n"
+        f"I can send 2 options matched to {budget}, {payment}, and your {timeline} timeline"
+        f"{f' in a {purchase_style.lower()} style' if purchase_style else ''}.\n\n"
+        f"{first_time_line}"
+        f"Key detail I noted: {context_brief or 'Family-first practicality with confident all-weather capability.'}\n\n"
         "If you want, reply with your top priority and I will send the best two picks."
     )
     return {
@@ -217,6 +297,22 @@ def _normalize_assessment(raw: dict, form_data: dict) -> dict:
         if isinstance(value, (dict, list)):
             value = json.dumps(value)
         merged[field] = str(value) if value is not None else str(base.get(field, ""))
+
+    profile = raw.get("specialistProfile")
+    if isinstance(profile, dict):
+        merged["specialistProfile"] = {
+            "name": str(profile.get("name") or merged["assignedSpecialist"]),
+            "title": str(profile.get("title") or "Customer Fit Specialist"),
+            "style": str(profile.get("style") or "Consultative"),
+            "strengths": [str(item) for item in (profile.get("strengths") or [])][:6],
+            "idealCustomers": [str(item) for item in (profile.get("idealCustomers") or [])][:6],
+            "whyMatch": str(profile.get("whyMatch") or merged["routingReason"]),
+        }
+        merged["assignedSpecialist"] = merged["specialistProfile"]["name"]
+        if not merged["routingReason"]:
+            merged["routingReason"] = merged["specialistProfile"]["whyMatch"]
+    else:
+        merged["specialistProfile"] = base.get("specialistProfile", {})
 
     return merged
 

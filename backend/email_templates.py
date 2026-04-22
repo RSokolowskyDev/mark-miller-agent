@@ -88,6 +88,7 @@ def build_polished_email_html(
     from_name: str = "Mark Miller Subaru",
     hero_src: str = "",
     badge_src: str = "",
+    include_cta: bool = True,
 ) -> str:
     subject_safe = html.escape(str(subject or "Mark Miller Subaru Follow-Up"))
     from_name_safe = html.escape(str(from_name or "Mark Miller Subaru"))
@@ -99,6 +100,17 @@ def build_polished_email_html(
         "https://www.markmillersubarusouthtowne.com/inventory/new/Subaru",
     ).strip()
     cta_url_safe = html.escape(cta_url)
+    cta_block = (
+        (
+            '<table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:10px;">'
+            '<tr><td align="center" style="border-radius:8px; background:#2563eb;">'
+            f'<a href="{cta_url_safe}" style="display:inline-block; padding:12px 20px; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none;">'
+            "Browse New Inventory"
+            "</a></td></tr></table>"
+        )
+        if include_cta
+        else ""
+    )
 
     asset_base = os.getenv(
         "EMAIL_ASSET_BASE_URL",
@@ -164,15 +176,7 @@ def build_polished_email_html(
                   <strong>{from_name_safe}</strong><br/>
                   Product Specialist
                 </p>
-                <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:10px;">
-                  <tr>
-                    <td align="center" style="border-radius:8px; background:#2563eb;">
-                      <a href="{cta_url_safe}" style="display:inline-block; padding:12px 20px; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none;">
-                        Browse New Inventory
-                      </a>
-                    </td>
-                  </tr>
-                </table>
+                {cta_block}
               </td>
             </tr>
             <tr>

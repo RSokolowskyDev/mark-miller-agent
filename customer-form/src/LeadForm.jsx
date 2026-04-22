@@ -5,6 +5,9 @@ const models = ["Outback", "Forester", "Crosstrek", "Ascent", "Solterra", "Impre
 const budgets = ["Under $25k", "$25-35k", "$35-45k", "$45k+"];
 const paymentMethods = ["Finance", "Lease", "Cash"];
 const timelines = ["This week", "This month", "Just exploring"];
+const firstTimeChoices = ["Yes, first time", "No, I have bought before", "It has been a while"];
+const ownedNewChoices = ["Yes", "No", "Not sure"];
+const purchaseStyles = ["I want guidance", "I like to compare details", "I want the fastest process"];
 
 const demoData = {
   name: "Sarah",
@@ -14,8 +17,12 @@ const demoData = {
   tradeIn: "2019 Honda Pilot, 2019, 61000 miles, Good",
   paymentMethod: "Finance",
   timeline: "This month",
+  firstTimeBuyer: "No, I have bought before",
+  ownedNewVehicle: "Yes",
+  purchaseStyle: "I like to compare details",
   context:
     "I have three kids and two dogs - a lab and a golden. We ski up Little Cottonwood Canyon almost every weekend in winter. Need something with AWD, good cargo space, and that can handle Utah snow. My husband drives a truck so this would be the main family car. We also do a lot of camping in the summer out near Moab.",
+  extraNotes: "I care most about safety tech and long-term reliability.",
   email: "",
 };
 
@@ -72,15 +79,21 @@ export default function LeadForm({ onSuccess }) {
     paymentMethod: "",
     timeline: "",
     context: "",
+    firstTimeBuyer: "",
+    ownedNewVehicle: "",
+    purchaseStyle: "",
+    extraNotes: "",
     email: "",
   });
   const [hasTradeIn, setHasTradeIn] = useState(null);
   const [nameInput, setNameInput] = useState("");
   const [tradeInInput, setTradeInInput] = useState("");
   const [contextInput, setContextInput] = useState("");
+  const [extraNotesInput, setExtraNotesInput] = useState("");
   const [nameSubmitted, setNameSubmitted] = useState(false);
   const [tradeInSubmitted, setTradeInSubmitted] = useState(false);
   const [contextSubmitted, setContextSubmitted] = useState(false);
+  const [extraNotesSubmitted, setExtraNotesSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const apiUrl = useMemo(() => import.meta.env.VITE_API_URL || "http://localhost:8000", []);
@@ -97,6 +110,10 @@ export default function LeadForm({ onSuccess }) {
   const paymentDone = !!form.paymentMethod;
   const timelineDone = !!form.timeline;
   const contextDone = contextSubmitted && form.context.trim().length > 0;
+  const firstTimeDone = !!form.firstTimeBuyer;
+  const ownedNewDone = !!form.ownedNewVehicle;
+  const purchaseStyleDone = !!form.purchaseStyle;
+  const extraNotesDone = !extraNotesInput.trim() || extraNotesSubmitted;
   const pipelineComplete =
     nameDone &&
     intentDone &&
@@ -106,6 +123,9 @@ export default function LeadForm({ onSuccess }) {
     tradeDone &&
     paymentDone &&
     timelineDone &&
+    firstTimeDone &&
+    ownedNewDone &&
+    purchaseStyleDone &&
     contextDone;
 
   const loadDemo = () => {
@@ -114,9 +134,11 @@ export default function LeadForm({ onSuccess }) {
     setNameInput(demoData.name);
     setTradeInInput(demoData.tradeIn);
     setContextInput(demoData.context);
+    setExtraNotesInput(demoData.extraNotes);
     setNameSubmitted(true);
     setTradeInSubmitted(true);
     setContextSubmitted(true);
+    setExtraNotesSubmitted(true);
   };
 
   const submitName = () => {
@@ -138,6 +160,11 @@ export default function LeadForm({ onSuccess }) {
     if (!trimmed) return;
     setField("context", trimmed);
     setContextSubmitted(true);
+  };
+
+  const submitExtraNotes = () => {
+    setField("extraNotes", extraNotesInput.trim());
+    setExtraNotesSubmitted(true);
   };
 
   const handleSubmit = async (e) => {
@@ -310,6 +337,30 @@ export default function LeadForm({ onSuccess }) {
 
         {timelineDone && (
           <>
+            <AssistantBubble>Is this your first time buying a vehicle?</AssistantBubble>
+            <ChoiceChips options={firstTimeChoices} value={form.firstTimeBuyer} onChange={(value) => setField("firstTimeBuyer", value)} />
+          </>
+        )}
+        {firstTimeDone && <UserBubble>{form.firstTimeBuyer}</UserBubble>}
+
+        {firstTimeDone && (
+          <>
+            <AssistantBubble>Have you owned a new vehicle before?</AssistantBubble>
+            <ChoiceChips options={ownedNewChoices} value={form.ownedNewVehicle} onChange={(value) => setField("ownedNewVehicle", value)} columns="grid-cols-3" />
+          </>
+        )}
+        {ownedNewDone && <UserBubble>{form.ownedNewVehicle}</UserBubble>}
+
+        {ownedNewDone && (
+          <>
+            <AssistantBubble>How do you like to shop?</AssistantBubble>
+            <ChoiceChips options={purchaseStyles} value={form.purchaseStyle} onChange={(value) => setField("purchaseStyle", value)} />
+          </>
+        )}
+        {purchaseStyleDone && <UserBubble>{form.purchaseStyle}</UserBubble>}
+
+        {purchaseStyleDone && (
+          <>
             <AssistantBubble>
               Tell us about your life and how you will use this vehicle. The more specific you are, the better we can match you.
             </AssistantBubble>
@@ -339,6 +390,32 @@ export default function LeadForm({ onSuccess }) {
 
         {contextDone && (
           <>
+            <AssistantBubble>Anything else we should know before matching you?</AssistantBubble>
+            {!extraNotesSubmitted && (
+              <div className="mb-5 ml-12">
+                <textarea
+                  className="min-h-[110px] w-full rounded-2xl border border-[#c4d4eb] bg-white px-4 py-3 text-lg outline-none focus:border-[#2a6fcd]"
+                  placeholder="Optional: deal breakers, must-have features, service expectations, etc."
+                  value={extraNotesInput}
+                  onChange={(e) => setExtraNotesInput(e.target.value)}
+                />
+                <div className="mt-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={submitExtraNotes}
+                    className="rounded-2xl border border-[#2a6fcd] bg-white px-4 py-2 text-sm font-semibold text-[#1b4e96]"
+                  >
+                    Save Note
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+        {extraNotesSubmitted && form.extraNotes && <UserBubble>{form.extraNotes}</UserBubble>}
+
+        {contextDone && (
+          <>
             <AssistantBubble>Want a personalized follow-up email? (Optional)</AssistantBubble>
             <div className="mb-3 ml-12">
               <input
@@ -357,7 +434,7 @@ export default function LeadForm({ onSuccess }) {
       <footer className="border-t border-[#d8dfeb] bg-white px-5 py-4">
         {error && <p className="mb-3 rounded-lg bg-red-50 p-3 text-red-700">{error}</p>}
         <button
-          disabled={loading || !pipelineComplete}
+          disabled={loading || !pipelineComplete || !extraNotesDone}
           type="submit"
           className="w-full rounded-2xl bg-[#2a6fcd] px-4 py-3 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
         >

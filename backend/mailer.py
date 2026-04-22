@@ -9,7 +9,14 @@ from email_templates import build_polished_email_html, normalize_email_body_text
 load_dotenv()
 
 
-def send_email(to: str, subject: str, html_body: str, body: str, from_name: str = "Mark Miller Subaru") -> None:
+def send_email(
+    to: str,
+    subject: str,
+    html_body: str,
+    body: str,
+    from_name: str = "Mark Miller Subaru",
+    include_cta: bool = False,
+) -> None:
     gmail_user = os.getenv("GMAIL_USER")
     gmail_app_password = os.getenv("GMAIL_APP_PASSWORD")
     display_from_name = os.getenv("EMAIL_FROM_NAME", "Ryan Sokolowsky").strip() or "Ryan Sokolowsky"
@@ -48,6 +55,7 @@ def send_email(to: str, subject: str, html_body: str, body: str, from_name: str 
         from_name=display_from_name,
         hero_src=hero_src,
         badge_src=badge_src,
+        include_cta=include_cta,
     )
 
     alt_part.attach(MIMEText(plain_text, "plain"))

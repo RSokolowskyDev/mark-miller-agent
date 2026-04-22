@@ -44,6 +44,9 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
         .slice(0, 8),
     [lead.signals]
   );
+  const profile = lead.specialist_profile || {};
+  const profileStrengths = Array.isArray(profile.strengths) ? profile.strengths : [];
+  const profileIdeal = Array.isArray(profile.idealCustomers) ? profile.idealCustomers : [];
 
   const personalDetails = parsePersonalDetails(lead.personal_details);
   const compactContext = personalDetails ? personalDetails.split(". ").slice(0, 2).join(". ") : "No context captured.";
@@ -153,6 +156,34 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
         </div>
 
         <section className="mb-4 rounded-md border border-slate-200 p-3">
+          <h3 className="mb-1 text-sm font-semibold">Matched Specialist Profile</h3>
+          <p className="text-sm font-semibold text-slate-800">
+            {profile.name || lead.assigned_specialist || "Assigned Specialist"}
+            {profile.title ? ` | ${profile.title}` : ""}
+          </p>
+          <p className="mt-1 text-xs text-slate-600">{profile.style || "Consultative style"}</p>
+          <p className="mt-2 text-xs text-slate-700">{profile.whyMatch || lead.routing_reason}</p>
+          {profileStrengths.length > 0 && (
+            <div className="mt-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Strengths</p>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {profileStrengths.map((item, idx) => (
+                  <span key={idx} className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800">{item}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {profileIdeal.length > 0 && (
+            <div className="mt-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ideal Customer Fits</p>
+              <ul className="mt-1 list-disc pl-4 text-xs text-slate-700">
+                {profileIdeal.map((item, idx) => <li key={idx}>{item}</li>)}
+              </ul>
+            </div>
+          )}
+        </section>
+
+        <section className="mb-4 rounded-md border border-slate-200 p-3">
           <h3 className="mb-2 text-sm font-semibold">Lead Signals</h3>
           <div className="flex flex-wrap gap-2">
             {normalizedSignals.map((signal, index) => (
@@ -188,4 +219,3 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
     </div>
   );
 }
-

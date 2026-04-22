@@ -24,11 +24,15 @@ Budget: {form_data.get('budget')}
 Trade-in: {form_data.get('tradeIn', 'None')}
 Payment: {form_data.get('paymentMethod')}
 Timeline: {form_data.get('timeline')}
+First-time buyer: {form_data.get('firstTimeBuyer')}
+Owned new vehicle before: {form_data.get('ownedNewVehicle')}
+Shopping style: {form_data.get('purchaseStyle')}
+Extra notes: {form_data.get('extraNotes')}
 About them: {form_data.get('context')}
 
 Return ONLY valid JSON with keys:
 score, tier, urgency, signals, recommendedModel, assignedSpecialist,
-summary, routingReason, talkingPoints, potentialObjections, personalDetails.
+summary, routingReason, talkingPoints, potentialObjections, personalDetails, specialistProfile.
 
 Formatting requirements:
 - score must be an integer 0-100
@@ -36,6 +40,8 @@ Formatting requirements:
 - urgency should be concise (for example: Immediate, This Month, Exploring)
 - signals must be an array of objects: {{"text":"...", "type":"positive|neutral|negative"}}
 - personalDetails must be a plain string paragraph (not an object)
+- specialistProfile must be an object:
+  {{"name":"...","title":"...","style":"...","strengths":["..."],"idealCustomers":["..."],"whyMatch":"..."}}
 """
     return Task(
         description=description,

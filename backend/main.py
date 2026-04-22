@@ -28,6 +28,10 @@ class FormData(BaseModel):
     paymentMethod: str
     timeline: str
     context: str
+    firstTimeBuyer: Optional[str] = None
+    ownedNewVehicle: Optional[str] = None
+    purchaseStyle: Optional[str] = None
+    extraNotes: Optional[str] = None
     email: Optional[str] = None
 
 
