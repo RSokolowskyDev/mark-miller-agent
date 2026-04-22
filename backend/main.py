@@ -67,9 +67,12 @@ async def _delayed_initial_email(to: str, subject: str, html: str, body: str, fr
 
 @app.post("/analyze")
 async def analyze(form_data: FormData, background_tasks: BackgroundTasks):
-    result = run_lead_pipeline(form_data.dict())
-    assessment = result["assessment"]
-    email = result["email"]
+    try:
+        result = run_lead_pipeline(form_data.dict())
+        assessment = result["assessment"]
+        email = result["email"]
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Lead pipeline failed: {str(exc)}")
 
     lead_payload = {
         **form_data.dict(),
