@@ -39,10 +39,6 @@ function parseNextBestStep(raw, fallbackSummary) {
         question: "Is your budget a hard cap or flexible for the right long-term fit?",
         rationale: "Budget language is often directional, and flexibility changes recommendation range.",
       },
-      {
-        question: "Have you visited or compared other dealerships yet?",
-        rationale: "Competitive context helps the specialist address missing concerns early.",
-      },
     ],
     _fallbackRationale:
       fallbackSummary ||
@@ -59,7 +55,7 @@ function parseNextBestStep(raw, fallbackSummary) {
           rationale: String(item.rationale || "").trim(),
         }))
         .filter((item) => item.question)
-        .slice(0, 5)
+        .slice(0, 3)
     : [];
 
   return {
@@ -154,13 +150,8 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
       label: signal.text,
       tone: signal.type === "negative" ? "red" : "green",
     }));
-    const footprintItems = digitalFootprint.map((item, index) => ({
-      key: `footprint-${index}`,
-      label: `${item.source}: ${item.detail}`,
-      tone: "slate",
-    }));
-    return [...signalItems, ...footprintItems].slice(0, 12);
-  }, [normalizedSignals, digitalFootprint]);
+    return signalItems.slice(0, 10);
+  }, [normalizedSignals]);
 
   const saveStatus = async (nextStatus) => {
     setStatus(nextStatus);
@@ -260,15 +251,8 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
                 ))}
               </ul>
             </div>
-          </section>
 
-          <section className="rounded-md border border-slate-200 p-3">
-            <h3 className="mb-2 text-sm font-semibold">Product Specialist Workflow</h3>
-            <div className="mb-3 rounded-md bg-amber-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Recommended Action</p>
-              <p className="mt-1 text-sm text-amber-950">{nextBestStep.action}</p>
-            </div>
-            <div className="mb-3">
+            <div className="mt-3 rounded-md border border-slate-200 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">AI Insight & Next Best Step</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {unifiedInsightSignals.length === 0 && <span className="text-xs text-slate-500">No signals captured.</span>}
@@ -295,6 +279,14 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
                   </li>
                 ))}
               </ol>
+            </div>
+          </section>
+
+          <section className="rounded-md border border-slate-200 p-3">
+            <h3 className="mb-2 text-sm font-semibold">Product Specialist Workflow</h3>
+            <div className="mb-3 rounded-md bg-amber-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Recommended Action</p>
+              <p className="mt-1 text-sm text-amber-950">{nextBestStep.action}</p>
             </div>
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</label>
             <select value={status} onChange={(e) => saveStatus(e.target.value)} className="mt-1 w-full rounded border px-2 py-2 text-xs">
