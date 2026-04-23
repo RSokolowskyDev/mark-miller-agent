@@ -325,6 +325,39 @@ def _is_bad_first_touch_email(body: str) -> bool:
     return word_count > 150
 
 
+def _align_email_sender_name(body_text: str, assigned_specialist: str) -> str:
+    text = str(body_text or "")
+    specialist = str(assigned_specialist or "").strip()
+    if not text or not specialist:
+        return text
+
+    # Normalize common "X here from Mark Miller..." intros to the assigned specialist.
+    intro_pattern = r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+here\s+from\s+Mark Miller"
+    text = re.sub(
+        intro_pattern,
+        f"{specialist} here from Mark Miller",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # Normalize signature lines that may carry a mismatched generated name.
+    lines = text.splitlines()
+    for idx, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if (
+            "product specialist" in stripped.lower()
+            or "mark miller subaru south towne" in stripped.lower()
+            or stripped.lower().startswith("best")
+        ):
+            continue
+        if re.fullmatch(r"[A-Za-z]+(?:\s+[A-Za-z]+)+", stripped):
+            lines[idx] = specialist
+            break
+    return "\n".join(lines)
+
+
 def _normalize_assessment(raw: dict, form_data: dict) -> dict:
     base = _default_assessment(form_data)
     if not isinstance(raw, dict):
@@ -432,6 +465,8 @@ def _normalize_email(raw: dict, form_data: dict, assessment: dict) -> dict:
         or merged.get("fromName")
         or "Mark Miller Subaru Product Specialist"
     )
+    merged["body"] = _align_email_sender_name(merged["body"], merged["fromName"])
+    merged["html"] = _align_email_sender_name(merged["html"], merged["fromName"])
     if _is_bad_first_touch_email(merged["body"]):
         return base
     return merged
