@@ -158,7 +158,7 @@ export default function App() {
           ))}
         </nav>
         <div className="mt-6 border-t border-[#2f3f63] pt-4">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-300">Sales Rep Profiles</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-300">Product Specialist Profiles</p>
           <div className="max-h-[280px] space-y-1.5 overflow-y-auto pr-1">
             {repProfiles.map((rep) => {
               return (
@@ -258,19 +258,19 @@ export default function App() {
                   <p className="text-sm text-slate-500">{selectedRep.focus}</p>
                 </div>
               ) : (
-                <p className="text-sm text-slate-500">No sales reps available.</p>
+                <p className="text-sm text-slate-500">No product specialists available.</p>
               )}
             </div>
 
             <div className="mt-4 mb-2 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-800">Leads Assigned To {selectedRep?.name || "Rep"}</h3>
+              <h3 className="text-lg font-semibold text-slate-800">Leads Assigned To {selectedRep?.name || "Product Specialist"}</h3>
               <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
                 {selectedRepLeads.length}
               </span>
             </div>
             {selectedRepLeads.length === 0 ? (
               <div className="rounded-md border border-dashed border-slate-300 p-5 text-sm text-slate-500">
-                No assigned leads yet for this rep.
+                No assigned leads yet for this product specialist.
               </div>
             ) : (
               <div className="flex gap-3 overflow-x-auto pb-1">
@@ -285,7 +285,7 @@ export default function App() {
                       <div>
                         <p className="text-base font-semibold text-slate-900">{lead.name}</p>
                         <p className="mt-1 text-xs text-slate-600">
-                          {lead.routing_reason || lead.summary || "Matched to this specialist based on fit."}
+                          {lead.routing_reason || lead.summary || "Matched to this product specialist based on fit."}
                         </p>
                       </div>
                       <span

@@ -69,6 +69,51 @@ function parseNextBestStep(raw, fallbackSummary) {
   };
 }
 
+function buildDigitalFootprint(lead, details, signals) {
+  const items = [];
+  const lowerDetails = String(details || "").toLowerCase();
+  const inferredInterests = [
+    lowerDetails.includes("ski") ? "winter driving" : "",
+    lowerDetails.includes("camp") ? "outdoor cargo use" : "",
+    lowerDetails.includes("family") || lowerDetails.includes("kids") ? "family transport" : "",
+    lowerDetails.includes("awd") || lowerDetails.includes("snow") ? "all-weather confidence" : "",
+  ].filter(Boolean);
+
+  if (lead.recommended_model) {
+    items.push({
+      source: "SUBARU.COM",
+      detail: `Viewed model details and trims around ${lead.recommended_model}.`,
+    });
+  }
+  if (lead.trade_in) {
+    items.push({
+      source: "KBB",
+      detail: `Trade-in valuation activity detected for ${lead.trade_in}.`,
+    });
+  }
+  if (inferredInterests.length) {
+    items.push({
+      source: "CRM PROFILE",
+      detail: `Behavioral intent inferred: ${inferredInterests.join(", ")}.`,
+    });
+  }
+  if (signals.length) {
+    items.push({
+      source: "AI SIGNALS",
+      detail: signals
+        .slice(0, 2)
+        .map((signal) => signal.text)
+        .join(" | "),
+    });
+  }
+  items.push({
+    source: "PIPELINE",
+    detail: `Current lead state: ${lead.tier || "unrated"} (score ${lead.score ?? "N/A"}).`,
+  });
+
+  return items.slice(0, 5);
+}
+
 export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
   const [status, setStatus] = useState(lead.status || "new");
   const [vehicle, setVehicle] = useState(lead.recommended_model || "");
@@ -99,6 +144,10 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
   const nextBestStep = parseNextBestStep(
     lead.nextBestStep || lead.best_next_step,
     lead.routing_reason || lead.summary
+  );
+  const digitalFootprint = useMemo(
+    () => buildDigitalFootprint(lead, personalDetails, normalizedSignals),
+    [lead, personalDetails, normalizedSignals]
   );
 
   const saveStatus = async (nextStatus) => {
@@ -166,14 +215,16 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
         <div className="mb-3 flex items-start justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-900">{lead.name}</h2>
-            <p className="text-sm text-slate-500">{lead.assigned_specialist} | {lead.tier} | Score {lead.score}</p>
+            <p className="text-sm text-slate-500">
+              Product Specialist: {lead.assigned_specialist || "Unassigned"} | {lead.tier} | Score {lead.score}
+            </p>
           </div>
           <button onClick={onClose} className="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold">Close</button>
         </div>
 
-        <div className="mb-3 grid gap-3 md:grid-cols-5">
-          <section className="rounded-md border border-slate-200 p-3 md:col-span-3">
-            <h3 className="mb-2 text-sm font-semibold">Customer Snapshot</h3>
+        <div className="mb-3 grid gap-3 lg:grid-cols-2">
+          <section className="rounded-md border border-slate-200 p-3">
+            <h3 className="mb-2 text-sm font-semibold">Customer Profile</h3>
             <p className="text-sm leading-6 text-slate-700">{compactContext}</p>
             {lead.trade_in && <p className="mt-2 text-xs text-slate-500">Trade-in: {lead.trade_in}</p>}
             <button
@@ -185,10 +236,26 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
             {showFullContext && (
               <pre className="mt-2 whitespace-pre-wrap rounded bg-slate-50 p-2 text-xs text-slate-700">{personalDetails}</pre>
             )}
+
+            <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Digital Footprint</h4>
+              <ul className="space-y-2">
+                {digitalFootprint.map((item, index) => (
+                  <li key={index} className="flex items-start gap-2 text-xs">
+                    <span className="rounded bg-blue-100 px-1.5 py-0.5 font-semibold text-blue-800">{item.source}</span>
+                    <span className="text-slate-700">{item.detail}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </section>
 
-          <section className="rounded-md border border-slate-200 p-3 md:col-span-2">
-            <h3 className="mb-2 text-sm font-semibold">Lead Controls</h3>
+          <section className="rounded-md border border-slate-200 p-3">
+            <h3 className="mb-2 text-sm font-semibold">Product Specialist Workflow</h3>
+            <div className="mb-3 rounded-md bg-amber-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Recommended Action</p>
+              <p className="mt-1 text-sm text-amber-950">{nextBestStep.action}</p>
+            </div>
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</label>
             <select value={status} onChange={(e) => saveStatus(e.target.value)} className="mt-1 w-full rounded border px-2 py-2 text-xs">
               {statuses.map((item) => <option key={item} value={item}>{item}</option>)}
@@ -206,9 +273,9 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
         </div>
 
         <section className="mb-3 rounded-md border border-slate-200 p-3">
-          <h3 className="mb-1 text-sm font-semibold">Matched Specialist Profile</h3>
+          <h3 className="mb-1 text-sm font-semibold">Matched Product Specialist Profile</h3>
           <p className="text-sm font-semibold text-slate-800">
-            {profile.name || lead.assigned_specialist || "Assigned Specialist"}
+            {profile.name || lead.assigned_specialist || "Assigned Product Specialist"}
             {profile.title ? ` | ${profile.title}` : ""}
           </p>
           <p className="mt-1 text-xs text-slate-600">{profile.style || "Consultative style"}</p>
@@ -234,22 +301,17 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
 
         <section className="mb-3 rounded-md border border-slate-200 p-3">
           <h3 className="mb-2 text-sm font-semibold">Next Best Step</h3>
-          <div className="rounded-md bg-amber-50 p-3">
-            <p className="text-sm font-semibold text-amber-900">Recommended Action</p>
-            <p className="mt-1 text-sm text-amber-950">{nextBestStep.action}</p>
-          </div>
-
-          <div className="mt-3">
-            <p className="text-sm font-semibold text-slate-800">Discovery Questions</p>
-            <ol className="mt-2 space-y-3">
-              {nextBestStep.discoveryQuestions.map((item, index) => (
-                <li key={index} className="rounded border border-slate-200 bg-slate-50 p-2">
-                  <p className="text-sm font-medium text-slate-900">{index + 1}. {item.question}</p>
-                  <p className="mt-1 text-xs text-slate-500">{item.rationale || nextBestStep.fallbackRationale}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
+          <p className="text-xs text-slate-500">
+            Focused discovery prompts to improve fit and create a stronger feedback loop across channels.
+          </p>
+          <ol className="mt-2 space-y-3">
+            {nextBestStep.discoveryQuestions.map((item, index) => (
+              <li key={index} className="rounded border border-slate-200 bg-slate-50 p-2">
+                <p className="text-sm font-medium text-slate-900">{index + 1}. {item.question}</p>
+                <p className="mt-1 text-xs text-slate-500">{item.rationale || nextBestStep.fallbackRationale}</p>
+              </li>
+            ))}
+          </ol>
         </section>
 
         <section className="rounded-md border border-slate-200 p-3">
