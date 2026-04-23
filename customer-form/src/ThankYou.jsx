@@ -1,7 +1,13 @@
 export default function ThankYou({ result }) {
   const name = result?.customerName || "there";
   const pending = Boolean(result?.pending);
-  const error = result?.error || "";
+  const rawError = result?.error;
+  const error =
+    typeof rawError === "string"
+      ? rawError
+      : rawError && typeof rawError === "object"
+        ? rawError.message || rawError.detail || ""
+        : "";
 
   return (
     <div className="rounded-[28px] border border-[#d8dfeb] bg-white p-10 text-center shadow-xl">

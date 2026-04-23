@@ -51,6 +51,24 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function extractErrorMessage(value, fallback) {
+  if (!value) return fallback;
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    const firstText = value.find((item) => typeof item === "string" && item.trim());
+    if (firstText) return firstText;
+    const firstObject = value.find((item) => item && typeof item === "object");
+    if (firstObject && typeof firstObject.msg === "string" && firstObject.msg.trim()) return firstObject.msg;
+    return fallback;
+  }
+  if (typeof value === "object") {
+    if (typeof value.detail === "string" && value.detail.trim()) return value.detail;
+    if (typeof value.message === "string" && value.message.trim()) return value.message;
+    if (typeof value.msg === "string" && value.msg.trim()) return value.msg;
+  }
+  return fallback;
+}
+
 function stepIsValid(step, form) {
   switch (step) {
     case 0:
@@ -226,13 +244,17 @@ export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroun
       .then(async (response) => {
         if (!response.ok) {
           const errPayload = await response.json().catch(() => ({}));
-          throw new Error(errPayload.detail || "We could not submit your request right now.");
+          throw new Error(
+            extractErrorMessage(errPayload.detail, "We could not submit your request right now.")
+          );
         }
         const data = await response.json();
         onBackgroundSuccess?.({ ...data, customerName: payload.name });
       })
       .catch((err) => {
-        onBackgroundError?.(err.message || "We could not finish processing your request yet.");
+        onBackgroundError?.(
+          extractErrorMessage(err?.message || err, "We could not finish processing your request yet.")
+        );
       });
   };
 
