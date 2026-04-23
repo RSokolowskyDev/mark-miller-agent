@@ -94,6 +94,7 @@ def _default_assessment(form_data: dict) -> dict:
     profile = _generate_dynamic_specialist_profile(form_data, model, tier)
     specialist = profile["name"]
     routing_reason = profile["whyMatch"]
+    best_next_step = _generate_best_next_step(form_data, model, tier)
 
     return {
         "score": score,
@@ -131,6 +132,63 @@ def _default_assessment(form_data: dict) -> dict:
             )
             + (f" Additional notes: {extra_notes}" if extra_notes else "")
         ),
+        "bestNextStep": best_next_step,
+    }
+
+
+def _generate_best_next_step(form_data: dict, model: str, tier: str) -> dict:
+    timeline = str(form_data.get("timeline") or "").strip() or "timeline not specified"
+    purchase_style = str(form_data.get("purchaseStyle") or "").strip().lower()
+    first_time_buyer = str(form_data.get("firstTimeBuyer") or "").strip().lower()
+    context = str(form_data.get("context") or "").strip()
+    budget = str(form_data.get("budget") or "").strip()
+    payment = str(form_data.get("paymentMethod") or "").strip()
+    trade_in = str(form_data.get("tradeIn") or "").strip()
+
+    if tier == "Hot":
+        priority = "High"
+        title = "Schedule a focused 15-minute model-fit call"
+    elif tier == "Warm":
+        priority = "Medium"
+        title = "Send two tailored options and confirm top priority"
+    else:
+        priority = "Low"
+        title = "Build confidence with a low-pressure comparison plan"
+
+    first_time_action = (
+        "Use plain-language buying steps and confirm they are comfortable with each next step."
+        if "first" in first_time_buyer
+        else "Lead with a concise side-by-side comparison focused on their daily use."
+    )
+    style_action = (
+        "Keep tone consultative with no-pressure language and one simple ask."
+        if "no pressure" in purchase_style or "early" in purchase_style
+        else "Keep guidance direct: present one primary recommendation and one fallback."
+    )
+    trade_action = (
+        f"Ask for photos/VIN to estimate the trade-in ({trade_in}) before discussing final numbers."
+        if trade_in
+        else "Offer a quick, optional trade-in estimate to reduce budget uncertainty."
+    )
+
+    rationale_bits = [
+        f"Customer interest currently tracks as {tier.lower()} with a {timeline} decision window.",
+        f"They are evaluating around {budget or 'their budget'} with {payment or 'their preferred payment approach'}.",
+    ]
+    if context:
+        rationale_bits.append("Their lifestyle details are clear enough to personalize recommendations immediately.")
+
+    suggested_message = (
+        f"I can share two {model} options matched to your {budget or 'budget'} and "
+        "walk you through the best fit in a quick, no-pressure call."
+    )
+
+    return {
+        "title": title,
+        "rationale": " ".join(rationale_bits),
+        "priority": priority,
+        "actions": [first_time_action, style_action, trade_action],
+        "suggestedMessage": suggested_message,
     }
 
 
@@ -313,6 +371,31 @@ def _normalize_assessment(raw: dict, form_data: dict) -> dict:
             merged["routingReason"] = merged["specialistProfile"]["whyMatch"]
     else:
         merged["specialistProfile"] = base.get("specialistProfile", {})
+
+    raw_next_step = raw.get("bestNextStep")
+    if isinstance(raw_next_step, str):
+        merged["bestNextStep"] = {
+            "title": raw_next_step.strip() or base["bestNextStep"]["title"],
+            "rationale": base["bestNextStep"]["rationale"],
+            "priority": base["bestNextStep"]["priority"],
+            "actions": base["bestNextStep"]["actions"],
+            "suggestedMessage": base["bestNextStep"]["suggestedMessage"],
+        }
+    elif isinstance(raw_next_step, dict):
+        actions = raw_next_step.get("actions")
+        if not isinstance(actions, list):
+            actions = base["bestNextStep"]["actions"]
+        merged["bestNextStep"] = {
+            "title": str(raw_next_step.get("title") or base["bestNextStep"]["title"]),
+            "rationale": str(raw_next_step.get("rationale") or base["bestNextStep"]["rationale"]),
+            "priority": str(raw_next_step.get("priority") or base["bestNextStep"]["priority"]),
+            "actions": [str(item) for item in actions][:3] or base["bestNextStep"]["actions"],
+            "suggestedMessage": str(
+                raw_next_step.get("suggestedMessage") or base["bestNextStep"]["suggestedMessage"]
+            ),
+        }
+    else:
+        merged["bestNextStep"] = base["bestNextStep"]
 
     return merged
 

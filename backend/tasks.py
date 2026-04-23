@@ -32,7 +32,7 @@ About them: {form_data.get('context')}
 
 Return ONLY valid JSON with keys:
 score, tier, urgency, signals, recommendedModel, assignedSpecialist,
-summary, routingReason, talkingPoints, potentialObjections, personalDetails, specialistProfile.
+summary, routingReason, talkingPoints, potentialObjections, personalDetails, specialistProfile, bestNextStep.
 
 Formatting requirements:
 - score must be an integer 0-100
@@ -42,6 +42,11 @@ Formatting requirements:
 - personalDetails must be a plain string paragraph (not an object)
 - specialistProfile must be an object:
   {{"name":"...","title":"...","style":"...","strengths":["..."],"idealCustomers":["..."],"whyMatch":"..."}}
+- bestNextStep must be an object:
+  {{"title":"...","rationale":"...","priority":"Low|Medium|High","actions":["..."],"suggestedMessage":"..."}}
+  - Make this practical and specific to this exact customer.
+  - Include exactly 2-3 actions.
+  - suggestedMessage should be one concise sentence the rep can say next.
 """
     return Task(
         description=description,
