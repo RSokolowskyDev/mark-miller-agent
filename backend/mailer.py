@@ -19,7 +19,8 @@ def send_email(
 ) -> None:
     gmail_user = os.getenv("GMAIL_USER")
     gmail_app_password = os.getenv("GMAIL_APP_PASSWORD")
-    display_from_name = os.getenv("EMAIL_FROM_NAME", "Ryan Sokolowsky").strip() or "Ryan Sokolowsky"
+    fallback_from_name = os.getenv("EMAIL_FROM_NAME", "Mark Miller Subaru Product Specialist").strip()
+    display_from_name = (from_name or fallback_from_name or "Mark Miller Subaru Product Specialist").strip()
 
     if not gmail_user or not gmail_app_password:
         raise RuntimeError("Missing GMAIL_USER or GMAIL_APP_PASSWORD")

@@ -305,7 +305,7 @@ def _default_email(form_data: dict, assessment: dict) -> dict:
         "subject": f"{name}, a quick follow-up on your Subaru options",
         "body": body,
         "html": body,
-        "fromName": "Ryan Sokolowsky",
+        "fromName": str(assessment.get("assignedSpecialist") or "Mark Miller Subaru Product Specialist"),
     }
 
 
@@ -425,7 +425,12 @@ def _normalize_email(raw: dict, form_data: dict, assessment: dict) -> dict:
     merged["subject"] = str(merged.get("subject") or base["subject"])
     merged["body"] = str(merged.get("body") or base["body"])
     merged["html"] = str(merged.get("html") or base["html"])
-    merged["fromName"] = "Ryan Sokolowsky"
+    merged["fromName"] = str(
+        merged.get("fromName")
+        or assessment.get("assignedSpecialist")
+        or base.get("fromName")
+        or "Mark Miller Subaru Product Specialist"
+    )
     if _is_bad_first_touch_email(merged["body"]):
         return base
     return merged
