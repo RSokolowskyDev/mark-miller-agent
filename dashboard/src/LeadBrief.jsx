@@ -149,6 +149,19 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
     () => buildDigitalFootprint(lead, personalDetails, normalizedSignals),
     [lead, personalDetails, normalizedSignals]
   );
+  const unifiedInsightSignals = useMemo(() => {
+    const signalItems = normalizedSignals.map((signal) => ({
+      key: `signal-${signal.text}`,
+      label: signal.text,
+      tone: signal.type === "negative" ? "red" : "green",
+    }));
+    const footprintItems = digitalFootprint.map((item, index) => ({
+      key: `footprint-${index}`,
+      label: `${item.source}: ${item.detail}`,
+      tone: "slate",
+    }));
+    return [...signalItems, ...footprintItems].slice(0, 12);
+  }, [normalizedSignals, digitalFootprint]);
 
   const saveStatus = async (nextStatus) => {
     setStatus(nextStatus);
@@ -279,7 +292,6 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
             {profile.title ? ` | ${profile.title}` : ""}
           </p>
           <p className="mt-1 text-xs text-slate-600">{profile.style || "Consultative style"}</p>
-          <p className="mt-2 text-xs text-slate-700">{profile.whyMatch || lead.routing_reason}</p>
           {profileStrengths.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2">
               {profileStrengths.map((item, idx) => (
@@ -290,20 +302,31 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
         </section>
 
         <section className="mb-3 rounded-md border border-slate-200 p-3">
-          <h3 className="mb-2 text-sm font-semibold">Lead Signals</h3>
-          <div className="flex flex-wrap gap-2">
-            {normalizedSignals.map((signal, index) => (
-              <span key={index} className="rounded bg-green-100 px-2 py-1 text-xs text-green-800">{signal.text}</span>
-            ))}
-            {normalizedSignals.length === 0 && <span className="text-xs text-slate-500">No signals captured.</span>}
-          </div>
-        </section>
-
-        <section className="mb-3 rounded-md border border-slate-200 p-3">
-          <h3 className="mb-2 text-sm font-semibold">Next Best Step</h3>
+          <h3 className="mb-2 text-sm font-semibold">AI Insight & Next Best Step</h3>
           <p className="text-xs text-slate-500">
-            Focused discovery prompts to improve fit and create a stronger feedback loop across channels.
+            Combined from form inputs, digital footprint context, and agent reasoning to guide the next interaction.
           </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {unifiedInsightSignals.length === 0 && <span className="text-xs text-slate-500">No signals captured.</span>}
+            {unifiedInsightSignals.map((item) => (
+              <span
+                key={item.key}
+                className={`rounded px-2 py-1 text-xs ${
+                  item.tone === "red"
+                    ? "bg-red-100 text-red-800"
+                    : item.tone === "slate"
+                      ? "bg-slate-100 text-slate-700"
+                      : "bg-green-100 text-green-800"
+                }`}
+              >
+                {item.label}
+              </span>
+            ))}
+          </div>
+          <div className="mt-3 rounded-md bg-amber-50 p-3">
+            <p className="text-sm font-semibold text-amber-900">Recommended Action</p>
+            <p className="mt-1 text-sm text-amber-950">{nextBestStep.action}</p>
+          </div>
           <ol className="mt-2 space-y-3">
             {nextBestStep.discoveryQuestions.map((item, index) => (
               <li key={index} className="rounded border border-slate-200 bg-slate-50 p-2">
@@ -312,6 +335,11 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
               </li>
             ))}
           </ol>
+        </section>
+
+        <section className="mb-3 rounded-md border border-slate-200 p-3">
+          <h3 className="mb-1 text-sm font-semibold">Why This Product Specialist</h3>
+          <p className="text-xs text-slate-700">{profile.whyMatch || lead.routing_reason || "Matched based on fit to lead goals and communication style."}</p>
         </section>
 
         <section className="rounded-md border border-slate-200 p-3">
