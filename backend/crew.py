@@ -90,7 +90,6 @@ def _default_assessment(form_data: dict) -> dict:
     else:
         tier = "Cold"
 
-    context_l = context.lower()
     profile = _generate_dynamic_specialist_profile(form_data, model, tier)
     specialist = profile["name"]
     routing_reason = profile["whyMatch"]
