@@ -138,7 +138,6 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
   );
 
   const profile = lead.specialist_profile || {};
-  const profileStrengths = Array.isArray(profile.strengths) ? profile.strengths : [];
   const personalDetails = parsePersonalDetails(lead.personal_details);
   const compactContext = personalDetails ? personalDetails.split(". ").slice(0, 1).join(". ") : "No context captured.";
   const nextBestStep = parseNextBestStep(
@@ -269,6 +268,34 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
               <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Recommended Action</p>
               <p className="mt-1 text-sm text-amber-950">{nextBestStep.action}</p>
             </div>
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">AI Insight & Next Best Step</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {unifiedInsightSignals.length === 0 && <span className="text-xs text-slate-500">No signals captured.</span>}
+                {unifiedInsightSignals.map((item) => (
+                  <span
+                    key={item.key}
+                    className={`rounded px-2 py-1 text-xs ${
+                      item.tone === "red"
+                        ? "bg-red-100 text-red-800"
+                        : item.tone === "slate"
+                          ? "bg-slate-100 text-slate-700"
+                          : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                ))}
+              </div>
+              <ol className="mt-2 space-y-2">
+                {nextBestStep.discoveryQuestions.map((item, index) => (
+                  <li key={index} className="rounded border border-slate-200 bg-slate-50 p-2">
+                    <p className="text-xs font-medium text-slate-900">{index + 1}. {item.question}</p>
+                    <p className="mt-1 text-[11px] text-slate-500">{item.rationale || nextBestStep.fallbackRationale}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</label>
             <select value={status} onChange={(e) => saveStatus(e.target.value)} className="mt-1 w-full rounded border px-2 py-2 text-xs">
               {statuses.map((item) => <option key={item} value={item}>{item}</option>)}
@@ -284,58 +311,6 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
             </button>
           </section>
         </div>
-
-        <section className="mb-3 rounded-md border border-slate-200 p-3">
-          <h3 className="mb-1 text-sm font-semibold">Matched Product Specialist Profile</h3>
-          <p className="text-sm font-semibold text-slate-800">
-            {profile.name || lead.assigned_specialist || "Assigned Product Specialist"}
-            {profile.title ? ` | ${profile.title}` : ""}
-          </p>
-          <p className="mt-1 text-xs text-slate-600">{profile.style || "Consultative style"}</p>
-          {profileStrengths.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {profileStrengths.map((item, idx) => (
-                <span key={idx} className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800">{item}</span>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="mb-3 rounded-md border border-slate-200 p-3">
-          <h3 className="mb-2 text-sm font-semibold">AI Insight & Next Best Step</h3>
-          <p className="text-xs text-slate-500">
-            Combined from form inputs, digital footprint context, and agent reasoning to guide the next interaction.
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {unifiedInsightSignals.length === 0 && <span className="text-xs text-slate-500">No signals captured.</span>}
-            {unifiedInsightSignals.map((item) => (
-              <span
-                key={item.key}
-                className={`rounded px-2 py-1 text-xs ${
-                  item.tone === "red"
-                    ? "bg-red-100 text-red-800"
-                    : item.tone === "slate"
-                      ? "bg-slate-100 text-slate-700"
-                      : "bg-green-100 text-green-800"
-                }`}
-              >
-                {item.label}
-              </span>
-            ))}
-          </div>
-          <div className="mt-3 rounded-md bg-amber-50 p-3">
-            <p className="text-sm font-semibold text-amber-900">Recommended Action</p>
-            <p className="mt-1 text-sm text-amber-950">{nextBestStep.action}</p>
-          </div>
-          <ol className="mt-2 space-y-3">
-            {nextBestStep.discoveryQuestions.map((item, index) => (
-              <li key={index} className="rounded border border-slate-200 bg-slate-50 p-2">
-                <p className="text-sm font-medium text-slate-900">{index + 1}. {item.question}</p>
-                <p className="mt-1 text-xs text-slate-500">{item.rationale || nextBestStep.fallbackRationale}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
 
         <section className="mb-3 rounded-md border border-slate-200 p-3">
           <h3 className="mb-1 text-sm font-semibold">Why This Product Specialist</h3>
