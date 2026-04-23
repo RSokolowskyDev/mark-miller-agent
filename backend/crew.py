@@ -425,10 +425,11 @@ def _normalize_email(raw: dict, form_data: dict, assessment: dict) -> dict:
     merged["subject"] = str(merged.get("subject") or base["subject"])
     merged["body"] = str(merged.get("body") or base["body"])
     merged["html"] = str(merged.get("html") or base["html"])
+    # Always keep sender identity aligned with the assigned Product Specialist.
     merged["fromName"] = str(
-        merged.get("fromName")
-        or assessment.get("assignedSpecialist")
+        assessment.get("assignedSpecialist")
         or base.get("fromName")
+        or merged.get("fromName")
         or "Mark Miller Subaru Product Specialist"
     )
     if _is_bad_first_touch_email(merged["body"]):

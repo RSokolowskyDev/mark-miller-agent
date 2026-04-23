@@ -104,7 +104,9 @@ async def analyze(form_data: FormData, background_tasks: BackgroundTasks):
                 email.get("subject", "Your personalized Subaru follow-up"),
                 email.get("html", ""),
                 email.get("body", ""),
-                email.get("fromName", assessment.get("assignedSpecialist", "Mark Miller Subaru")),
+                assessment.get("assignedSpecialist")
+                or email.get("fromName")
+                or "Mark Miller Subaru Product Specialist",
             )
         except Exception as exc:
             print("analyze.background_task_error:", repr(exc))
