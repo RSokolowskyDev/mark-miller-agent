@@ -3,7 +3,7 @@ import LeadCard from "./LeadCard";
 import LeadBrief from "./LeadBrief";
 import EmailLog from "./EmailLog";
 
-const navItems = ["Pipeline", "All Leads", "Email Log"];
+const navItems = ["Home", "Pipeline", "All Leads", "Email Log"];
 const baseRepProfiles = [
   {
     name: "Ryan Sokolowsky",
@@ -43,7 +43,7 @@ const baseRepProfiles = [
 ];
 
 export default function App() {
-  const [view, setView] = useState("Pipeline");
+  const [view, setView] = useState("Home");
   const [leads, setLeads] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
   const [selectedRepName, setSelectedRepName] = useState("");
@@ -66,6 +66,11 @@ export default function App() {
   }, []);
 
   const byStatus = (status) => leads.filter((lead) => (lead.status || "new") === status);
+  const columns = {
+    new: "New",
+    contacted: "Contacted",
+    converted: "Converted",
+  };
   const hotCount = leads.filter((lead) => (lead.tier || "").toLowerCase() === "hot").length;
   const warmCount = leads.filter((lead) => (lead.tier || "").toLowerCase() === "warm").length;
   const avgScore = leads.length
@@ -228,68 +233,53 @@ export default function App() {
           </div>
         </div>
 
-        {view === "Pipeline" && (
-          <div className="grid gap-3 xl:grid-cols-3">
-            <section className="flex max-h-[calc(100vh-245px)] flex-col rounded-lg border border-[#d9e2f0] bg-white p-2.5">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-800">New</h3>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                  {byStatus("new").length}
-                </span>
-              </div>
-              <div className="space-y-2 overflow-y-auto pr-1">
-                {byStatus("new").map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} onOpen={() => setSelectedLead(lead)} />
-                ))}
-              </div>
-            </section>
-
-            <section className="flex max-h-[calc(100vh-245px)] flex-col rounded-lg border border-[#d9e2f0] bg-white p-3 xl:col-span-2">
-              <div className="mb-3 rounded-md border border-[#d9e2f0] bg-[#f8fbff] p-3">
-                {selectedRep ? (
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-base font-bold text-slate-900">{selectedRep.name}</p>
-                        <p className="text-sm text-slate-600">{selectedRep.title}</p>
-                      </div>
-                      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
-                        {selectedRepLeads.length} assigned
+        {view === "Home" && (
+          <section className="rounded-lg border border-[#d9e2f0] bg-white p-4">
+            <div className="rounded-md border border-[#d9e2f0] bg-[#f8fbff] p-4">
+              {selectedRep ? (
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">{selectedRep.name}</p>
+                      <p className="text-lg text-slate-700">{selectedRep.title}</p>
+                    </div>
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
+                      {selectedRepLeads.length} assigned
+                    </span>
+                  </div>
+                  <p className="text-base text-slate-700">{selectedRep.experience}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(selectedRep.interests || []).slice(0, 6).map((interest) => (
+                      <span key={interest} className="rounded-full bg-white px-3 py-1 text-sm text-slate-700">
+                        {interest}
                       </span>
-                    </div>
-                    <p className="text-sm text-slate-700">{selectedRep.experience}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(selectedRep.interests || []).slice(0, 4).map((interest) => (
-                        <span key={interest} className="rounded-full bg-white px-2 py-1 text-xs text-slate-700">
-                          {interest}
-                        </span>
-                      ))}
-                    </div>
-                    <p className="text-xs text-slate-500">{selectedRep.focus}</p>
+                    ))}
                   </div>
-                ) : (
-                  <p className="text-sm text-slate-500">No sales reps available.</p>
-                )}
-              </div>
+                  <p className="text-sm text-slate-500">{selectedRep.focus}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">No sales reps available.</p>
+              )}
+            </div>
 
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-800">Leads Assigned To {selectedRep?.name || "Rep"}</h3>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                  {selectedRepLeads.length}
-                </span>
+            <div className="mt-4 mb-2 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-800">Leads Assigned To {selectedRep?.name || "Rep"}</h3>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                {selectedRepLeads.length}
+              </span>
+            </div>
+            {selectedRepLeads.length === 0 ? (
+              <div className="rounded-md border border-dashed border-slate-300 p-5 text-sm text-slate-500">
+                No assigned leads yet for this rep.
               </div>
-              <div className="space-y-2 overflow-y-auto pr-1">
-                {selectedRepLeads.length === 0 && (
-                  <div className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                    No assigned leads yet for this rep.
-                  </div>
-                )}
+            ) : (
+              <div className="flex gap-3 overflow-x-auto pb-1">
                 {selectedRepLeads.map((lead) => (
                   <button
                     key={lead.id}
                     type="button"
                     onClick={() => setSelectedLead(lead)}
-                    className="w-full rounded-md border border-[#d9e2f0] bg-white p-3 text-left hover:bg-[#f8fbff]"
+                    className="min-w-[320px] max-w-[360px] flex-1 rounded-md border border-[#d9e2f0] bg-white p-3 text-left hover:bg-[#f8fbff]"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -313,7 +303,27 @@ export default function App() {
                   </button>
                 ))}
               </div>
-            </section>
+            )}
+          </section>
+        )}
+
+        {view === "Pipeline" && (
+          <div className="grid gap-3 xl:grid-cols-3">
+            {Object.entries(columns).map(([status, title]) => (
+              <section key={status} className="flex max-h-[calc(100vh-245px)] flex-col rounded-lg border border-[#d9e2f0] bg-white p-2.5">
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                    {byStatus(status).length}
+                  </span>
+                </div>
+                <div className="space-y-2 overflow-y-auto pr-1">
+                  {byStatus(status).map((lead) => (
+                    <LeadCard key={lead.id} lead={lead} onOpen={() => setSelectedLead(lead)} />
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
         )}
 
