@@ -22,44 +22,50 @@ function parsePersonalDetails(raw) {
   return raw;
 }
 
-function parseNextStep(raw, fallbackSummary) {
+function parseNextBestStep(raw, fallbackSummary) {
   const base = {
-    title: "Send two matched options and confirm top priority",
-    rationale:
-      fallbackSummary ||
-      "Use customer context to provide one clear recommendation and one backup option with low-pressure next steps.",
-    priority: "Medium",
-    actions: [
-      "Reflect the customer's top lifestyle need in your opening.",
-      "Recommend one primary model and one practical fallback.",
-      "Ask for one concrete next step with a low-pressure timeline.",
+    action:
+      "Send two matched options by email and ask for one must-have to narrow the recommendation.",
+    discoveryQuestions: [
+      {
+        question: "Who else is involved in the final decision?",
+        rationale: "Knowing decision dynamics helps set realistic pace and follow-up strategy.",
+      },
+      {
+        question: "What frustrates you most about your current vehicle right now?",
+        rationale: "Current pain points reveal non-negotiables that should drive model and trim fit.",
+      },
+      {
+        question: "Is your budget a hard cap or flexible for the right long-term fit?",
+        rationale: "Budget language is often directional, and flexibility changes recommendation range.",
+      },
+      {
+        question: "Have you visited or compared other dealerships yet?",
+        rationale: "Competitive context helps the specialist address missing concerns early.",
+      },
     ],
-    suggestedMessage:
-      "I can send two options matched to your priorities and walk you through the best fit in 10-15 minutes.",
+    _fallbackRationale:
+      fallbackSummary ||
+      "Use this as a starting recommendation and refine with high-impact discovery.",
   };
 
-  if (!raw) return base;
-  if (typeof raw === "string") {
-    const trimmed = raw.trim();
-    if (!trimmed) return base;
-    try {
-      return parseNextStep(JSON.parse(trimmed), fallbackSummary);
-    } catch {
-      return { ...base, title: trimmed };
-    }
-  }
-  if (typeof raw !== "object") return base;
-
-  const actions = Array.isArray(raw.actions)
-    ? raw.actions.map((item) => String(item)).filter(Boolean).slice(0, 3)
-    : base.actions;
+  const normalizedRaw = raw && typeof raw === "object" ? raw : {};
+  const action = String(normalizedRaw.action || "").trim();
+  const questions = Array.isArray(normalizedRaw.discoveryQuestions)
+    ? normalizedRaw.discoveryQuestions
+        .filter((item) => item && typeof item === "object")
+        .map((item) => ({
+          question: String(item.question || "").trim(),
+          rationale: String(item.rationale || "").trim(),
+        }))
+        .filter((item) => item.question)
+        .slice(0, 5)
+    : [];
 
   return {
-    title: String(raw.title || base.title),
-    rationale: String(raw.rationale || base.rationale),
-    priority: String(raw.priority || base.priority),
-    actions: actions.length ? actions : base.actions,
-    suggestedMessage: String(raw.suggestedMessage || base.suggestedMessage),
+    action: action || base.action,
+    discoveryQuestions: questions.length ? questions : base.discoveryQuestions,
+    fallbackRationale: base._fallbackRationale,
   };
 }
 
@@ -90,7 +96,10 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
   const profileStrengths = Array.isArray(profile.strengths) ? profile.strengths : [];
   const personalDetails = parsePersonalDetails(lead.personal_details);
   const compactContext = personalDetails ? personalDetails.split(". ").slice(0, 1).join(". ") : "No context captured.";
-  const nextStep = parseNextStep(lead.best_next_step, lead.routing_reason);
+  const nextBestStep = parseNextBestStep(
+    lead.nextBestStep || lead.best_next_step,
+    lead.routing_reason || lead.summary
+  );
 
   const saveStatus = async (nextStatus) => {
     setStatus(nextStatus);
@@ -151,13 +160,6 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
     }
   };
 
-  const priorityColor =
-    nextStep.priority.toLowerCase() === "high"
-      ? "bg-red-100 text-red-700"
-      : nextStep.priority.toLowerCase() === "low"
-        ? "bg-slate-100 text-slate-700"
-        : "bg-amber-100 text-amber-700";
-
   return (
     <div className="fixed inset-0 z-50 bg-black/45 p-3">
       <div className="mx-auto max-h-[96vh] max-w-5xl overflow-y-auto rounded-lg border border-slate-200 bg-white p-4">
@@ -174,13 +176,6 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
             <h3 className="mb-2 text-sm font-semibold">Customer Snapshot</h3>
             <p className="text-sm leading-6 text-slate-700">{compactContext}</p>
             {lead.trade_in && <p className="mt-2 text-xs text-slate-500">Trade-in: {lead.trade_in}</p>}
-            <div className="mt-2 flex flex-wrap gap-2">
-              {normalizedSignals.slice(0, 4).map((signal, idx) => (
-                <span key={idx} className="rounded bg-slate-100 px-2 py-1 text-[11px] text-slate-600">
-                  {signal.text}
-                </span>
-              ))}
-            </div>
             <button
               onClick={() => setShowFullContext((value) => !value)}
               className="mt-2 rounded border border-slate-300 px-2 py-1 text-xs"
@@ -189,38 +184,6 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
             </button>
             {showFullContext && (
               <pre className="mt-2 whitespace-pre-wrap rounded bg-slate-50 p-2 text-xs text-slate-700">{personalDetails}</pre>
-            )}
-          </section>
-
-          <section className="rounded-md border border-slate-200 p-3 md:col-span-2">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold">Best Next Step (AI)</h3>
-              <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${priorityColor}`}>{nextStep.priority}</span>
-            </div>
-            <p className="text-sm font-semibold text-slate-800">{nextStep.title}</p>
-            <p className="mt-1 text-xs text-slate-600">{nextStep.rationale}</p>
-            <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-slate-700">
-              {nextStep.actions.map((action, idx) => <li key={idx}>{action}</li>)}
-            </ul>
-            <p className="mt-2 rounded bg-blue-50 p-2 text-xs text-blue-800">{nextStep.suggestedMessage}</p>
-          </section>
-        </div>
-
-        <div className="mb-3 grid gap-3 md:grid-cols-5">
-          <section className="rounded-md border border-slate-200 p-3 md:col-span-3">
-            <h3 className="mb-1 text-sm font-semibold">Matched Specialist Profile</h3>
-            <p className="text-sm font-semibold text-slate-800">
-              {profile.name || lead.assigned_specialist || "Assigned Specialist"}
-              {profile.title ? ` | ${profile.title}` : ""}
-            </p>
-            <p className="mt-1 text-xs text-slate-600">{profile.style || "Consultative style"}</p>
-            <p className="mt-2 text-xs text-slate-700">{profile.whyMatch || lead.routing_reason}</p>
-            {profileStrengths.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {profileStrengths.map((item, idx) => (
-                  <span key={idx} className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800">{item}</span>
-                ))}
-              </div>
             )}
           </section>
 
@@ -243,12 +206,49 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
         </div>
 
         <section className="mb-3 rounded-md border border-slate-200 p-3">
+          <h3 className="mb-1 text-sm font-semibold">Matched Specialist Profile</h3>
+          <p className="text-sm font-semibold text-slate-800">
+            {profile.name || lead.assigned_specialist || "Assigned Specialist"}
+            {profile.title ? ` | ${profile.title}` : ""}
+          </p>
+          <p className="mt-1 text-xs text-slate-600">{profile.style || "Consultative style"}</p>
+          <p className="mt-2 text-xs text-slate-700">{profile.whyMatch || lead.routing_reason}</p>
+          {profileStrengths.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {profileStrengths.map((item, idx) => (
+                <span key={idx} className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800">{item}</span>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="mb-3 rounded-md border border-slate-200 p-3">
           <h3 className="mb-2 text-sm font-semibold">Lead Signals</h3>
           <div className="flex flex-wrap gap-2">
             {normalizedSignals.map((signal, index) => (
               <span key={index} className="rounded bg-green-100 px-2 py-1 text-xs text-green-800">{signal.text}</span>
             ))}
             {normalizedSignals.length === 0 && <span className="text-xs text-slate-500">No signals captured.</span>}
+          </div>
+        </section>
+
+        <section className="mb-3 rounded-md border border-slate-200 p-3">
+          <h3 className="mb-2 text-sm font-semibold">Next Best Step</h3>
+          <div className="rounded-md bg-amber-50 p-3">
+            <p className="text-sm font-semibold text-amber-900">Recommended Action</p>
+            <p className="mt-1 text-sm text-amber-950">{nextBestStep.action}</p>
+          </div>
+
+          <div className="mt-3">
+            <p className="text-sm font-semibold text-slate-800">Discovery Questions</p>
+            <ol className="mt-2 space-y-3">
+              {nextBestStep.discoveryQuestions.map((item, index) => (
+                <li key={index} className="rounded border border-slate-200 bg-slate-50 p-2">
+                  <p className="text-sm font-medium text-slate-900">{index + 1}. {item.question}</p>
+                  <p className="mt-1 text-xs text-slate-500">{item.rationale || nextBestStep.fallbackRationale}</p>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 

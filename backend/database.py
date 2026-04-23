@@ -45,6 +45,7 @@ def init_db() -> None:
                 summary TEXT,
                 routing_reason TEXT,
                 best_next_step TEXT,
+                nextBestStep TEXT,
                 talking_points TEXT,
                 objections TEXT,
                 personal_details TEXT,
@@ -64,6 +65,7 @@ def init_db() -> None:
         _ensure_column(conn, "leads", "extra_notes", "TEXT")
         _ensure_column(conn, "leads", "specialist_profile", "TEXT")
         _ensure_column(conn, "leads", "best_next_step", "TEXT")
+        _ensure_column(conn, "leads", "nextBestStep", "TEXT")
         conn.commit()
 
 
@@ -94,7 +96,12 @@ def save_lead(lead_dict: Dict[str, Any]) -> str:
         "assigned_specialist": lead_dict.get("assignedSpecialist") or lead_dict.get("assigned_specialist"),
         "summary": lead_dict.get("summary", ""),
         "routing_reason": lead_dict.get("routingReason") or lead_dict.get("routing_reason", ""),
-        "best_next_step": json.dumps(lead_dict.get("bestNextStep") or lead_dict.get("best_next_step") or {}),
+        "best_next_step": json.dumps(
+            lead_dict.get("nextBestStep") or lead_dict.get("bestNextStep") or lead_dict.get("best_next_step") or {}
+        ),
+        "nextBestStep": json.dumps(
+            lead_dict.get("nextBestStep") or lead_dict.get("bestNextStep") or lead_dict.get("best_next_step") or {}
+        ),
         "talking_points": json.dumps(lead_dict.get("talkingPoints") or lead_dict.get("talking_points", [])),
         "objections": json.dumps(lead_dict.get("potentialObjections") or lead_dict.get("objections", [])),
         "personal_details": lead_dict.get("personalDetails") or lead_dict.get("personal_details", ""),
@@ -127,12 +134,20 @@ def _decode_row(row: sqlite3.Row) -> Dict[str, Any]:
     if row is None:
         return {}
     item = dict(row)
-    for field in ["signals", "talking_points", "objections", "emails_sent", "specialist_profile", "best_next_step"]:
+    for field in [
+        "signals",
+        "talking_points",
+        "objections",
+        "emails_sent",
+        "specialist_profile",
+        "best_next_step",
+        "nextBestStep",
+    ]:
         try:
-            default = "{}" if field in {"specialist_profile", "best_next_step"} else "[]"
+            default = "{}" if field in {"specialist_profile", "best_next_step", "nextBestStep"} else "[]"
             item[field] = json.loads(item[field] or default)
         except json.JSONDecodeError:
-            item[field] = {} if field in {"specialist_profile", "best_next_step"} else []
+            item[field] = {} if field in {"specialist_profile", "best_next_step", "nextBestStep"} else []
     return item
 
 

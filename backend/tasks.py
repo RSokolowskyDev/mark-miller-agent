@@ -16,6 +16,55 @@ Available Product Specialists:
 - Drew Callahan: trade-ins, used vehicles, value-focused buyers
 - Morgan Ellis: bilingual Spanish/English, budget-conscious buyers
 
+VEHICLE RECOMMENDATION RULES:
+- Never output "Not sure yet" as a recommendation.
+  Always pick a specific model. If unsure between two,
+  pick the more conservative match and note the alternative.
+- Use trade-in make/model/year to infer size preference
+  and lifestyle. A Ford Escape suggests compact SUV comfort
+  zone. A minivan suggests maximum space priority.
+- "Big family" without a number means Forester first,
+  Ascent as an option to explore in person.
+- Confidence score 1-2 = lead with simplicity and patience
+  in all recommendations.
+- Confidence score 4-5 = lead with efficiency, respect
+  their research, don't over-explain.
+- Follow-up preference "call" = direct and decisive person,
+  approach accordingly.
+- Follow-up preference "email" = analytical, needs time,
+  send information not pressure.
+- Follow-up preference "text" = casual, keep all
+  communication brief and friendly.
+- Budget is a feeling. Note when budget and lifestyle
+  signals are misaligned - a family of 5 with a $25k
+  budget needs honest guidance, not just validation.
+
+NEXT BEST STEP RULES:
+Generate a nextBestStep object in your JSON output:
+{{
+  "nextBestStep": {{
+    "action": "<one specific sentence - what to do,
+                when, how, referencing something from
+                their form>",
+    "discoveryQuestions": [
+      {{
+        "question": "<question to ask the customer>",
+        "rationale": "<one sentence: why this question
+                       matters for THIS specific customer>"
+      }}
+    ]
+  }}
+}}
+
+Discovery questions must go beyond the obvious.
+Consider: what they didn't say, who else is involved,
+life changes ahead, current vehicle frustrations,
+whether they've visited other dealers, their actual
+emotional state, whether budget is hard or soft,
+what they already know from online research.
+Generate 4-5 questions. Make them specific to this
+customer - not generic questions you'd ask anyone.
+
 Customer data:
 Name: {form_data.get('name')}
 Intent: {form_data.get('intent')}
@@ -24,6 +73,8 @@ Budget: {form_data.get('budget')}
 Trade-in: {form_data.get('tradeIn', 'None')}
 Payment: {form_data.get('paymentMethod')}
 Timeline: {form_data.get('timeline')}
+Confidence score (1-5): {form_data.get('confidence')}
+Follow-up preference: {form_data.get('followUpPreference')}
 First-time buyer: {form_data.get('firstTimeBuyer')}
 Owned new vehicle before: {form_data.get('ownedNewVehicle')}
 Shopping style: {form_data.get('purchaseStyle')}
@@ -32,7 +83,7 @@ About them: {form_data.get('context')}
 
 Return ONLY valid JSON with keys:
 score, tier, urgency, signals, recommendedModel, assignedSpecialist,
-summary, routingReason, talkingPoints, potentialObjections, personalDetails, specialistProfile, bestNextStep.
+summary, routingReason, talkingPoints, potentialObjections, personalDetails, specialistProfile, nextBestStep.
 
 Formatting requirements:
 - score must be an integer 0-100
@@ -42,11 +93,10 @@ Formatting requirements:
 - personalDetails must be a plain string paragraph (not an object)
 - specialistProfile must be an object:
   {{"name":"...","title":"...","style":"...","strengths":["..."],"idealCustomers":["..."],"whyMatch":"..."}}
-- bestNextStep must be an object:
-  {{"title":"...","rationale":"...","priority":"Low|Medium|High","actions":["..."],"suggestedMessage":"..."}}
-  - Make this practical and specific to this exact customer.
-  - Include exactly 2-3 actions.
-  - suggestedMessage should be one concise sentence the rep can say next.
+- nextBestStep must be an object:
+  {{"action":"...","discoveryQuestions":[{{"question":"...","rationale":"..."}}]}}
+  - action must be one specific sentence, not generic
+  - discoveryQuestions must contain 4-5 question/rationale objects
 """
     return Task(
         description=description,

@@ -85,6 +85,7 @@ async def analyze(form_data: FormData, background_tasks: BackgroundTasks):
         lead_payload = {
             **form_data.dict(),
             **assessment,
+            "nextBestStep": assessment.get("nextBestStep", {}),
             "email_subject": email.get("subject", ""),
             "email_body": email.get("body", ""),
             "email_html": email.get("html", ""),
