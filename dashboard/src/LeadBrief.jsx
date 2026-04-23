@@ -271,14 +271,6 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
                   </span>
                 ))}
               </div>
-              <ol className="mt-2 space-y-2">
-                {nextBestStep.discoveryQuestions.map((item, index) => (
-                  <li key={index} className="rounded border border-slate-200 bg-slate-50 p-2">
-                    <p className="text-xs font-medium text-slate-900">{index + 1}. {item.question}</p>
-                    <p className="mt-1 text-[11px] text-slate-500">{item.rationale || nextBestStep.fallbackRationale}</p>
-                  </li>
-                ))}
-              </ol>
             </div>
           </section>
 
@@ -301,6 +293,17 @@ export default function LeadBrief({ lead, onClose, apiUrl, onUpdated }) {
             <button onClick={markConverted} className="mt-2 w-full rounded-md bg-green-500 px-3 py-2 text-xs font-semibold text-white">
               Mark as Converted
             </button>
+            <div className="mt-3 rounded-md border border-slate-200 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Discovery Questions</p>
+              <ol className="mt-2 space-y-2">
+                {nextBestStep.discoveryQuestions.map((item, index) => (
+                  <li key={index} className="rounded border border-slate-200 bg-slate-50 p-2">
+                    <p className="text-xs font-medium text-slate-900">{index + 1}. {item.question}</p>
+                    <p className="mt-1 text-[11px] text-slate-500">{item.rationale || nextBestStep.fallbackRationale}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </section>
         </div>
 
