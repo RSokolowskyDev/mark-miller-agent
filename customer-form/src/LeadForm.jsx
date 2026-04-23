@@ -19,25 +19,199 @@ const confidenceCopy = {
   5: "Confident, I know what I want",
 };
 
-const demoProfile = {
-  name: "Sarah",
-  confidence: 2,
-  experienceChoice: "Walk me through everything",
-  experienceText: "",
-  usageChoices: ["Family / kids", "Outdoor adventures"],
-  usageText: "",
-  priorityChoices: ["Safety", "Reliability"],
-  priorityText: "",
-  budgetSlider: 35000,
-  budgetText: "",
-  timeline: "This month",
-  tradeInYes: true,
-  tradeInDetails: "2019 Honda Pilot",
-  followUp: "Email",
-  context:
-    "I have three kids and two dogs - a lab and a golden. We ski up Little Cottonwood Canyon almost every weekend in winter. Need something with AWD, good cargo space, and that can handle Utah snow. My husband drives a truck so this would be the main family car. We also camp near Moab in the summer.",
-  email: "",
-};
+const demoProfiles = [
+  {
+    label: "Family Weekend Adventurer",
+    name: "Sarah",
+    confidence: 2,
+    experienceChoice: "Walk me through everything",
+    experienceText: "",
+    usageChoices: ["Family / kids", "Outdoor adventures"],
+    usageText: "",
+    priorityChoices: ["Safety", "Reliability"],
+    priorityText: "",
+    budgetSlider: 35000,
+    budgetText: "",
+    timeline: "This month",
+    tradeInYes: true,
+    tradeInDetails: "2019 Honda Pilot",
+    followUp: "Email",
+    context:
+      "I have three kids and two dogs - a lab and a golden. We ski up Little Cottonwood Canyon almost every weekend in winter. Need something with AWD, good cargo space, and that can handle Utah snow.",
+    email: "sarah.family.demo@gmail.com",
+  },
+  {
+    label: "First-Time Professional",
+    name: "Evan",
+    confidence: 1,
+    experienceChoice: "Walk me through everything",
+    experienceText: "",
+    usageChoices: ["Daily commute"],
+    usageText: "Mostly city driving around Salt Lake",
+    priorityChoices: ["Low payment", "Reliability"],
+    priorityText: "",
+    budgetSlider: 25000,
+    budgetText: "",
+    timeline: "This month",
+    tradeInYes: false,
+    tradeInDetails: "",
+    followUp: "Email",
+    context: "First time buying on my own. I need something reliable with manageable monthly payments.",
+    email: "evan.firstcar.demo@gmail.com",
+  },
+  {
+    label: "No-Pressure Browser",
+    name: "Mia",
+    confidence: 3,
+    experienceChoice: "No pressure, still early",
+    experienceText: "",
+    usageChoices: ["Daily commute", "Family / kids"],
+    usageText: "",
+    priorityChoices: ["Safety"],
+    priorityText: "Good visibility and easier parking",
+    budgetSlider: 30000,
+    budgetText: "",
+    timeline: "Just exploring",
+    tradeInYes: true,
+    tradeInDetails: "2015 Toyota Camry",
+    followUp: "Text",
+    context: "I am browsing now but want to narrow down options for a safer family vehicle this year.",
+    email: "mia.browse.demo@gmail.com",
+  },
+  {
+    label: "Feature Comparison Shopper",
+    name: "Daniel",
+    confidence: 5,
+    experienceChoice: "Give me the facts, I'll decide",
+    experienceText: "",
+    usageChoices: ["Daily commute", "Outdoor adventures"],
+    usageText: "",
+    priorityChoices: ["Reliability"],
+    priorityText: "AWD and snow handling",
+    budgetSlider: 40000,
+    budgetText: "",
+    timeline: "This week",
+    tradeInYes: false,
+    tradeInDetails: "",
+    followUp: "Call",
+    context: "I compare trim features closely. I want AWD, good cargo room, and strong long-term value.",
+    email: "daniel.compare.demo@gmail.com",
+  },
+  {
+    label: "Growing Family Upgrade",
+    name: "Olivia",
+    confidence: 2,
+    experienceChoice: "Walk me through everything",
+    experienceText: "",
+    usageChoices: ["Family / kids"],
+    usageText: "School drop-offs and sports gear",
+    priorityChoices: ["Safety", "Reliability"],
+    priorityText: "",
+    budgetSlider: 38000,
+    budgetText: "",
+    timeline: "This month",
+    tradeInYes: true,
+    tradeInDetails: "2018 Nissan Rogue",
+    followUp: "Email",
+    context: "We have two kids and need more cargo room and better winter confidence than our current SUV.",
+    email: "olivia.family.demo@gmail.com",
+  },
+  {
+    label: "Outdoor Couple",
+    name: "Noah",
+    confidence: 4,
+    experienceChoice: "Give me the facts, I'll decide",
+    experienceText: "",
+    usageChoices: ["Outdoor adventures"],
+    usageText: "Camping and mountain weekends",
+    priorityChoices: ["Reliability"],
+    priorityText: "Roof rack options and cargo utility",
+    budgetSlider: 42000,
+    budgetText: "",
+    timeline: "This week",
+    tradeInYes: true,
+    tradeInDetails: "2020 Jeep Cherokee",
+    followUp: "Call",
+    context: "We spend a lot of weekends in the mountains and need dependable AWD with space for gear.",
+    email: "noah.outdoors.demo@gmail.com",
+  },
+  {
+    label: "Budget-Conscious Parent",
+    name: "Ava",
+    confidence: 2,
+    experienceChoice: "No pressure, still early",
+    experienceText: "",
+    usageChoices: ["Family / kids", "Daily commute"],
+    usageText: "",
+    priorityChoices: ["Low payment", "Safety"],
+    priorityText: "",
+    budgetSlider: 28000,
+    budgetText: "",
+    timeline: "This month",
+    tradeInYes: false,
+    tradeInDetails: "",
+    followUp: "Text",
+    context: "I need a practical family vehicle and want to stay within a comfortable monthly payment.",
+    email: "ava.budget.demo@gmail.com",
+  },
+  {
+    label: "New-to-Subaru Shopper",
+    name: "Liam",
+    confidence: 3,
+    experienceChoice: "Walk me through everything",
+    experienceText: "",
+    usageChoices: ["Daily commute", "Outdoor adventures"],
+    usageText: "",
+    priorityChoices: ["Reliability"],
+    priorityText: "Something easy to own long-term",
+    budgetSlider: 33000,
+    budgetText: "",
+    timeline: "Just exploring",
+    tradeInYes: true,
+    tradeInDetails: "2017 Ford Escape",
+    followUp: "Email",
+    context: "I have heard good things about Subaru and want help comparing options that fit city and weekend use.",
+    email: "liam.newsubaru.demo@gmail.com",
+  },
+  {
+    label: "Commute + Kids Balance",
+    name: "Emma",
+    confidence: 3,
+    experienceChoice: "Give me the facts, I'll decide",
+    experienceText: "",
+    usageChoices: ["Daily commute", "Family / kids"],
+    usageText: "",
+    priorityChoices: ["Safety", "Low payment"],
+    priorityText: "",
+    budgetSlider: 32000,
+    budgetText: "",
+    timeline: "This month",
+    tradeInYes: true,
+    tradeInDetails: "2016 Honda CR-V",
+    followUp: "Email",
+    context: "I need one car that works for weekday commuting and weekend family errands.",
+    email: "emma.balance.demo@gmail.com",
+  },
+  {
+    label: "Quick Decision Buyer",
+    name: "Mason",
+    confidence: 4,
+    experienceChoice: "Give me the facts, I'll decide",
+    experienceText: "",
+    usageChoices: ["Daily commute"],
+    usageText: "Long highway drives",
+    priorityChoices: ["Reliability", "Safety"],
+    priorityText: "",
+    budgetSlider: 45000,
+    budgetText: "",
+    timeline: "This week",
+    tradeInYes: false,
+    tradeInDetails: "",
+    followUp: "Call",
+    context: "I am ready to decide quickly if I find the right fit and financing terms.",
+    email: "mason.quick.demo@gmail.com",
+  },
+];
 
 function formatBudget(value) {
   if (value === null || value === undefined) return "";
@@ -67,6 +241,20 @@ function extractErrorMessage(value, fallback) {
     if (typeof value.msg === "string" && value.msg.trim()) return value.msg;
   }
   return fallback;
+}
+
+function friendlyError(value, fallback) {
+  const parsed = extractErrorMessage(value, fallback);
+  const lower = String(parsed || "").toLowerCase();
+  if (
+    lower.includes("input should be") ||
+    lower.includes("validation error") ||
+    lower.includes("field required") ||
+    lower.includes("valid string")
+  ) {
+    return fallback;
+  }
+  return parsed;
 }
 
 function stepIsValid(step, form) {
@@ -178,10 +366,12 @@ export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroun
   };
 
   const loadDemo = () => {
-    setForm(demoProfile);
+    const random = demoProfiles[Math.floor(Math.random() * demoProfiles.length)];
+    const { label, ...profile } = random;
+    setForm(profile);
     setStep(TOTAL_STEPS - 1);
     setDirection(1);
-    setDemoLoadedLabel("Family Weekend Adventurer");
+    setDemoLoadedLabel(label);
     setError("");
   };
 
@@ -204,7 +394,9 @@ export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroun
     const experience = form.experienceText.trim() || form.experienceChoice;
     const usage = [...form.usageChoices, ...(form.usageText.trim() ? [form.usageText.trim()] : [])];
     const priorities = [...form.priorityChoices, ...(form.priorityText.trim() ? [form.priorityText.trim()] : [])];
-    const budget = form.budgetText.trim() || form.budgetSlider;
+    const budget =
+      form.budgetText.trim() ||
+      (typeof form.budgetSlider === "number" ? formatBudget(form.budgetSlider) : "Not sure yet");
     const tradeIn = form.tradeInYes ? form.tradeInDetails.trim() || null : null;
 
     const payload = {
@@ -245,7 +437,7 @@ export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroun
         if (!response.ok) {
           const errPayload = await response.json().catch(() => ({}));
           throw new Error(
-            extractErrorMessage(errPayload.detail, "We could not submit your request right now.")
+            friendlyError(errPayload.detail, "We could not submit your request right now.")
           );
         }
         const data = await response.json();
@@ -253,7 +445,7 @@ export default function LeadForm({ onSubmitted, onBackgroundSuccess, onBackgroun
       })
       .catch((err) => {
         onBackgroundError?.(
-          extractErrorMessage(err?.message || err, "We could not finish processing your request yet.")
+          friendlyError(err?.message || err, "We could not finish processing your request yet.")
         );
       });
   };

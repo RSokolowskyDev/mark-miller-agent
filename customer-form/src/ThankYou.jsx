@@ -1,13 +1,6 @@
 export default function ThankYou({ result }) {
   const name = result?.customerName || "there";
   const pending = Boolean(result?.pending);
-  const rawError = result?.error;
-  const error =
-    typeof rawError === "string"
-      ? rawError
-      : rawError && typeof rawError === "object"
-        ? rawError.message || rawError.detail || ""
-        : "";
 
   return (
     <div className="rounded-[28px] border border-[#d8dfeb] bg-white p-10 text-center shadow-xl">
@@ -19,7 +12,6 @@ export default function ThankYou({ result }) {
           : "We are reviewing your information and will be in touch shortly."}
       </p>
       {pending && <p className="mx-auto mt-2 max-w-xl text-sm text-slate-500">You can close this page any time.</p>}
-      {error && <p className="mx-auto mt-4 max-w-xl rounded-lg bg-amber-50 p-3 text-sm text-amber-800">{error}</p>}
       <svg className="mx-auto mt-8 h-40 w-40 text-[#2a6fcd]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="4" />
         <path d="M20 60 L40 40 L55 52 L78 30" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
