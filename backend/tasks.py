@@ -125,8 +125,9 @@ Rules:
 - Keep subject under 9 words
 - Do NOT include a signature line or sender name (system adds signature)
 - This is FIRST CONTACT:
-  - Do NOT imply a previous call/visit/text/chat
-  - Do NOT use phrases like "great chatting again", "as discussed", "yesterday"
+  - This email is sent BEFORE any in-person visit, phone call, or prior conversation.
+  - Do NOT imply a previous call/visit/text/chat.
+  - Do NOT use phrases like "great chatting", "great connecting", "as discussed", "yesterday", "again", "welcome back", "after meeting".
 - Ask one simple next step at the end
 
 Return ONLY valid JSON:

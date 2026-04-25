@@ -294,12 +294,12 @@ def _default_email(form_data: dict, assessment: dict) -> dict:
     )
     body = (
         f"Hi {name},\n\n"
-        f"Thanks for sharing what you need in your next vehicle. Based on your goals, {model} is a strong fit.\n\n"
+        f"Thanks for sharing what you need in your next vehicle. Before we meet, {model} looks like a strong fit based on your goals.\n\n"
         f"I can send 2 options matched to {budget}, {payment}, and your {timeline} timeline"
         f"{f' in a {purchase_style.lower()} style' if purchase_style else ''}.\n\n"
         f"{first_time_line}"
         f"Key detail I noted: {context_brief or 'Family-first practicality with confident all-weather capability.'}\n\n"
-        "If you want, reply with your top priority and I will send the best two picks."
+        "If you want, reply with your top priority and I will send the best two picks before your visit."
     )
     return {
         "subject": f"{name}, a quick follow-up on your Subaru options",
@@ -314,6 +314,14 @@ def _is_bad_first_touch_email(body: str) -> bool:
     prior_contact_phrases = [
         "great chatting",
         "great connecting",
+        "great to connect",
+        "it was great to connect",
+        "it was great connecting",
+        "thanks for coming in",
+        "after your visit",
+        "after meeting",
+        "good seeing you",
+        "great seeing you",
         "as discussed",
         "yesterday",
         "again",
