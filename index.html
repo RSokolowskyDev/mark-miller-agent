@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mark Miller Subaru — AI Lead Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f0f0f;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #c0392b;
+      border: 1px solid #c0392b44;
+      border-radius: 999px;
+      padding: 0.3rem 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    h1 span { color: #c0392b; }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: #999;
+      line-height: 1.7;
+      max-width: 520px;
+      margin: 0 auto 0.75rem;
+    }
+
+    .tech {
+      font-size: 0.75rem;
+      color: #555;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 3rem;
+    }
+
+    @media (max-width: 500px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s, transform 0.2s, background 0.2s;
+      text-align: left;
+      display: block;
+    }
+
+    .card:hover {
+      border-color: #c0392b66;
+      background: #1f1a1a;
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: #f0f0f0;
+    }
+
+    .card-desc {
+      font-size: 0.8rem;
+      color: #777;
+      line-height: 1.6;
+    }
+
+    .card-arrow {
+      margin-top: 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #c0392b;
+    }
+
+    .steps {
+      border-top: 1px solid #1e1e1e;
+      padding-top: 2rem;
+      text-align: left;
+    }
+
+    .steps-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 1rem;
+    }
+
+    .steps-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .steps-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.82rem;
+      color: #888;
+      line-height: 1.5;
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #1e1e1e;
+      border: 1px solid #2e2e2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #c0392b;
+      margin-top: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">Live Demo</div>
+
+    <h1>Mark Miller Subaru<br /><span>AI Lead Intelligence</span></h1>
+
+    <p class="subtitle">
+      An AI-powered lead scoring and follow-up system built to show how autonomous agents can integrate directly into dealership operations.
+    </p>
+    <p class="tech">CrewAI &nbsp;·&nbsp; FastAPI &nbsp;·&nbsp; React &nbsp;·&nbsp; Gemini &nbsp;·&nbsp; Gmail</p>
+
+    <div class="cards">
+      <a class="card" href="https://rsokolowskydev.github.io/mark-miller-agent/customer-form/" target="_blank" rel="noopener noreferrer">
+        <div class="card-icon">📋</div>
+        <div class="card-title">Customer Form</div>
+        <div class="card-desc">Submit a vehicle inquiry. The AI pipeline scores your lead and drafts a personalized follow-up email automatically.</div>
+        <div class="card-arrow">Open form →</div>
+      </a>
+
+      <a class="card" href="https://rsokolowskydev.github.io/mark-miller-agent/dashboard/" target="_blank" rel="noopener noreferrer">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Specialist Dashboard</div>
+        <div class="card-desc">View scored leads in real time with AI-generated talking points, objection handlers, and conversion tracking.</div>
+        <div class="card-arrow">Open dashboard →</div>
+      </a>
+    </div>
+
+    <div class="steps">
+      <div class="steps-title">How it works</div>
+      <ul class="steps-list">
+        <li><span class="step-num">1</span> Customer submits the inquiry form.</li>
+        <li><span class="step-num">2</span> Lead Analyst agent scores the inquiry, assigns a specialist, and generates talking points.</li>
+        <li><span class="step-num">3</span> Communications Specialist agent writes a personalized follow-up email and sends it.</li>
+        <li><span class="step-num">4</span> Lead appears in the dashboard in near real time for the specialist to review.</li>
+        <li><span class="step-num">5</span> Specialist marks the lead as converted — triggering an automated post-sale email sequence.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
